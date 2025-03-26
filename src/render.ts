@@ -34,6 +34,9 @@ export class MarkdownRender {
             if (format === RenderFormat.WECHAT) {
                 // 使用微信公众号格式解析器
                 WechatParser.renderToContainer(content, container);
+                
+                // 添加复制按钮
+                this.addCopyButton(container, content);
             } else {
                 // 使用Obsidian的Markdown渲染器
                 await MarkdownRenderer.renderMarkdown(
@@ -47,6 +50,50 @@ export class MarkdownRender {
             console.error("Markdown渲染失败:", error);
             container.innerHTML = this.fallbackParseMarkdown(content);
         }
+    }
+
+    /**
+     * 添加一键复制按钮到微信公众号格式预览中
+     * @param container 容器元素
+     * @param content 原始Markdown内容
+     */
+    private static addCopyButton(container: HTMLElement, content: string): void {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.position = 'sticky';
+        buttonContainer.style.top = '0';
+        buttonContainer.style.textAlign = 'right';
+        buttonContainer.style.zIndex = '100';
+        buttonContainer.style.marginBottom = '10px';
+        buttonContainer.style.padding = '5px';
+        buttonContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        
+        const copyButton = document.createElement('button');
+        copyButton.textContent = '一键复制HTML到微信';
+        copyButton.style.backgroundColor = '#07C160';
+        copyButton.style.color = 'white';
+        copyButton.style.border = 'none';
+        copyButton.style.borderRadius = '4px';
+        copyButton.style.padding = '6px 12px';
+        copyButton.style.cursor = 'pointer';
+        copyButton.style.fontSize = '14px';
+        
+        copyButton.addEventListener('click', async () => {
+            const success = await WechatParser.copyAsWechatFormat(content);
+            if (success) {
+                copyButton.textContent = '复制成功!';
+                setTimeout(() => {
+                    copyButton.textContent = '一键复制HTML到微信';
+                }, 2000);
+            } else {
+                copyButton.textContent = '复制失败!';
+                setTimeout(() => {
+                    copyButton.textContent = '一键复制HTML到微信';
+                }, 2000);
+            }
+        });
+        
+        buttonContainer.appendChild(copyButton);
+        container.insertBefore(buttonContainer, container.firstChild);
     }
 
     /**

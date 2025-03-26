@@ -271,8 +271,34 @@ export class DoocsMdPreviewView extends ItemView {
 		formatSelectEl.addEventListener("change", (e) => {
 			const target = e.target as HTMLSelectElement;
 			this.currentFormat = target.value as RenderFormat;
+			
+			// 更新预览
 			this.updatePreviewFromActiveFile();
-			new Notice(`预览格式已切换为${formatOptions.find(o => o.value === this.currentFormat)?.label}`);
+			
+			// 如果选择了微信格式，添加额外样式
+			if (this.currentFormat === RenderFormat.WECHAT) {
+				this.previewEl.addClass("wechat-preview-mode");
+				// 移除之前的主题样式
+				ThemeManager.applyTheme(this.previewEl, "light");
+				// 禁用主题按钮
+				const themeBtn = this.toolbarEl.querySelector(".doocs-md-theme-btn") as HTMLElement;
+				if (themeBtn) {
+					themeBtn.style.opacity = "0.5";
+					themeBtn.style.pointerEvents = "none";
+				}
+				new Notice(`已切换为微信公众号格式预览，固定为浅色主题`);
+			} else {
+				this.previewEl.removeClass("wechat-preview-mode");
+				// 恢复主题按钮
+				const themeBtn = this.toolbarEl.querySelector(".doocs-md-theme-btn") as HTMLElement;
+				if (themeBtn) {
+					themeBtn.style.opacity = "1";
+					themeBtn.style.pointerEvents = "auto";
+				}
+				// 恢复当前主题
+				ThemeManager.applyTheme(this.previewEl, this.plugin.settings.previewTheme);
+				new Notice(`已切换为默认格式预览`);
+			}
 		});
 		
 		// 添加主题切换按钮

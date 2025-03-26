@@ -279,6 +279,98 @@
   color: #aaa;
 }
 
+/* ===== 微信公众号格式预览 ===== */
+.wechat-preview-mode {
+  background-color: white !important;
+  color: #3f3f3f !important;
+  padding: 20px !important;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif !important;
+}
+
+.wechat-preview-mode .doocs-md-render {
+  /* 确保微信预览区域使用正确字体 */
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif !important;
+}
+
+/* 美化微信预览区域滚动条 */
+.wechat-preview-mode::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.wechat-preview-mode::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 3px;
+}
+
+.wechat-preview-mode::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
+
+/* 微信格式的代码块样式 */
+.wechat-preview-mode pre {
+  position: relative;
+  background-color: #f8f8f8 !important;
+  border-radius: 4px !important;
+  padding: 10px !important;
+  margin: 15px 0 !important;
+  overflow: auto !important;
+  font-family: Menlo, Monaco, Consolas, Courier New, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  border: 1px solid #f0f0f0 !important;
+}
+
+.wechat-preview-mode code {
+  background-color: #f8f8f8 !important;
+  border-radius: 3px !important;
+  padding: 2px 5px !important;
+  font-family: Menlo, Monaco, Consolas, Courier New, monospace !important;
+  font-size: 85% !important;
+  margin: 0 2px !important;
+}
+
+/* 微信格式的表格样式 */
+.wechat-preview-mode table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 15px 0 !important;
+  font-size: 14px !important;
+  text-align: left !important;
+  border: 1px solid #e8e8e8 !important;
+}
+
+.wechat-preview-mode th {
+  background-color: #f8f8f8 !important;
+  padding: 8px 10px !important;
+  border: 1px solid #e8e8e8 !important;
+  font-weight: bold !important;
+}
+
+.wechat-preview-mode td {
+  padding: 8px 10px !important;
+  border: 1px solid #e8e8e8 !important;
+}
+
+/* 微信格式的图片居中样式 */
+.wechat-preview-mode img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  margin: 10px auto !important;
+  border-radius: 4px !important;
+}
+
+/* 微信格式的引用块样式 */
+.wechat-preview-mode blockquote {
+  padding: 10px 15px !important;
+  background-color: #f9f9f9 !important;
+  border-left: 4px solid #dfe2e5 !important;
+  color: #888 !important;
+  margin: 15px 0 !important;
+  border-radius: 0 4px 4px 0 !important;
+}
+
 /* ===== 状态指示器 ===== */
 .doocs-md-no-file {
   display: flex;

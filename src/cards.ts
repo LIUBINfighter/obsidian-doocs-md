@@ -1,12 +1,12 @@
 import { ItemView, WorkspaceLeaf, MarkdownView, MarkdownRenderer, setIcon, Notice, TFile, Slider } from "obsidian";
-import DoocsMd from "./main";
+import Md2Cards from "./main";
 
 // 定义视图类型
-export const VIEW_TYPE_DOOCS_PREVIEW = 'doocs-md-preview';
+export const VIEW_TYPE_DOOCS_PREVIEW = 'md-notes-preview';
 
 // 预览视图类
-export class DoocsMdPreviewView extends ItemView {
-	private plugin: DoocsMd;
+export class Md2CardsPreviewView extends ItemView {
+	private plugin: Md2Cards;
 	private toolbarEl: HTMLElement;
 	private previewEl: HTMLElement;
 	private widthControlsEl: HTMLElement;
@@ -33,7 +33,7 @@ export class DoocsMdPreviewView extends ItemView {
 	// 宽度缩放因子 (默认为1.0)
 	private widthScale: number = 1.0;
 
-	constructor(leaf: WorkspaceLeaf, plugin: DoocsMd) {
+	constructor(leaf: WorkspaceLeaf, plugin: Md2Cards) {
 		super(leaf);
 		this.plugin = plugin;
 		
@@ -46,7 +46,7 @@ export class DoocsMdPreviewView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "Doocs MD 预览";
+		return "md2cards 预览";
 	}
 
 	async onOpen() {
@@ -54,24 +54,24 @@ export class DoocsMdPreviewView extends ItemView {
 		containerEl.empty();
 		
 		// 创建工具栏
-		this.toolbarEl = containerEl.createDiv({ cls: "doocs-md-toolbar" });
+		this.toolbarEl = containerEl.createDiv({ cls: "md-notes-toolbar" });
 		this.createToolbar();
 		
 		// 创建预览容器
-		this.previewEl = containerEl.createDiv({ cls: "doocs-md-preview-container" });
+		this.previewEl = containerEl.createDiv({ cls: "md-notes-preview-container" });
 		this.applyPreviewSize();
 		
 		// 添加焦点事件监听
 		this.registerDomEvent(this.containerEl, 'focusin', () => {
 			this.isFocused = true;
-			this.containerEl.addClass('doocs-md-view-focused');
+			this.containerEl.addClass('md-notes-view-focused');
 		});
 		
 		this.registerDomEvent(this.containerEl, 'focusout', (e) => {
 			// 检查焦点是否移出了预览视图
 			if (!this.containerEl.contains(e.relatedTarget as Node)) {
 				this.isFocused = false;
-				this.containerEl.removeClass('doocs-md-view-focused');
+				this.containerEl.removeClass('md-notes-view-focused');
 			}
 		});
 		
@@ -173,7 +173,7 @@ export class DoocsMdPreviewView extends ItemView {
 	// 显示无文件消息
 	showNoFileMessage() {
 		this.previewEl.empty();
-		const noFileEl = this.previewEl.createDiv({ cls: 'doocs-md-no-file' });
+		const noFileEl = this.previewEl.createDiv({ cls: 'md-notes-no-file' });
 		noFileEl.setText("没有打开的Markdown文件");
 	}
 	
@@ -184,12 +184,12 @@ export class DoocsMdPreviewView extends ItemView {
 		
 		// 添加文件路径指示
 		if (this.lastActiveMarkdownFile) {
-			const pathIndicator = this.previewEl.createDiv({ cls: "doocs-md-file-path" });
+			const pathIndicator = this.previewEl.createDiv({ cls: "md-notes-file-path" });
 			pathIndicator.setText(`预览: ${this.lastActiveMarkdownFile.basename}`);
 		}
 		
 		// 创建渲染容器
-		const renderContainer = this.previewEl.createDiv({ cls: "doocs-md-render" });
+		const renderContainer = this.previewEl.createDiv({ cls: "md-notes-render" });
 		
 		try {
 			// 使用Obsidian的Markdown渲染器进行渲染
@@ -211,16 +211,16 @@ export class DoocsMdPreviewView extends ItemView {
 		this.toolbarEl.empty();
 		
 		// 工具栏标题
-		const titleEl = this.toolbarEl.createDiv({ cls: "doocs-md-toolbar-title" });
+		const titleEl = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-title" });
 		titleEl.setText("预览比例：");
 		
 		// 长宽比选择器
-		const ratioSelectEl = this.toolbarEl.createDiv({ cls: "doocs-md-toolbar-ratios" });
+		const ratioSelectEl = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-ratios" });
 		
 		// 添加长宽比选项
 		this.aspectRatioOptions.forEach(option => {
 			const ratioBtn = ratioSelectEl.createEl("button", { 
-				cls: "doocs-md-ratio-btn",
+				cls: "md-notes-ratio-btn",
 				text: option.label
 			});
 			
@@ -236,7 +236,7 @@ export class DoocsMdPreviewView extends ItemView {
 				this.plugin.saveSettings();
 				
 				// 移除所有按钮的active类
-				ratioSelectEl.findAll(".doocs-md-ratio-btn").forEach(btn => 
+				ratioSelectEl.findAll(".md-notes-ratio-btn").forEach(btn => 
 					btn.removeClass("active"));
 				
 				// 为当前按钮添加active类
@@ -251,12 +251,12 @@ export class DoocsMdPreviewView extends ItemView {
 		});
 		
 		// 添加聚焦状态指示器
-		const focusIndicator = this.toolbarEl.createDiv({ cls: "doocs-md-focus-indicator" });
+		const focusIndicator = this.toolbarEl.createDiv({ cls: "md-notes-focus-indicator" });
 		focusIndicator.setText("预览聚焦时将暂停自动更新");
 		
 		// 刷新按钮
 		const refreshBtn = this.toolbarEl.createEl("button", { 
-			cls: "doocs-md-refresh-btn",
+			cls: "md-notes-refresh-btn",
 			attr: { title: "刷新预览" }
 		});
 		setIcon(refreshBtn, "refresh-cw");
@@ -267,7 +267,7 @@ export class DoocsMdPreviewView extends ItemView {
 		});
 		
 		// 创建宽度调整控件容器
-		this.widthControlsEl = this.toolbarEl.createDiv({ cls: "doocs-md-width-controls" });
+		this.widthControlsEl = this.toolbarEl.createDiv({ cls: "md-notes-width-controls" });
 		this.createWidthControls();
 	}
 	
@@ -276,22 +276,22 @@ export class DoocsMdPreviewView extends ItemView {
 		this.widthControlsEl.empty();
 		
 		// 宽度控制标题
-		const widthTitleEl = this.widthControlsEl.createDiv({ cls: "doocs-md-width-title" });
+		const widthTitleEl = this.widthControlsEl.createDiv({ cls: "md-notes-width-title" });
 		widthTitleEl.setText("预览宽度：");
 		
 		// 创建宽度显示
-		const widthValueEl = this.widthControlsEl.createDiv({ cls: "doocs-md-width-value" });
+		const widthValueEl = this.widthControlsEl.createDiv({ cls: "md-notes-width-value" });
 		widthValueEl.setText(`${Math.round(this.widthScale * 100)}%`);
 		
 		// 创建减小宽度按钮
 		const decreaseBtn = this.widthControlsEl.createEl("button", {
-			cls: "doocs-md-width-btn",
+			cls: "md-notes-width-btn",
 			text: "-"
 		});
 		
 		// 创建增加宽度按钮
 		const increaseBtn = this.widthControlsEl.createEl("button", {
-			cls: "doocs-md-width-btn",
+			cls: "md-notes-width-btn",
 			text: "+"
 		});
 		
@@ -311,7 +311,7 @@ export class DoocsMdPreviewView extends ItemView {
 		
 		// 重置宽度按钮
 		const resetBtn = this.widthControlsEl.createEl("button", {
-			cls: "doocs-md-width-reset-btn",
+			cls: "md-notes-width-reset-btn",
 			text: "重置"
 		});
 		
@@ -324,7 +324,7 @@ export class DoocsMdPreviewView extends ItemView {
 	// 更新宽度缩放
 	updateWidthScale() {
 		// 更新宽度显示
-		const widthValueEl = this.widthControlsEl.querySelector(".doocs-md-width-value");
+		const widthValueEl = this.widthControlsEl.querySelector(".md-notes-width-value");
 		if (widthValueEl) {
 			widthValueEl.setText(`${Math.round(this.widthScale * 100)}%`);
 		}

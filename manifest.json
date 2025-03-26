@@ -1,9 +1,9 @@
 {
-  "id": "obsidian-doocs-md",
-  "name": "Doocs MD Preview",
+  "id": "obsidian-md-notes",
+  "name": "md2cards Preview",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
-  "description": "Doocs风格的Markdown预览插件",
+  "description": "卡片Cards风格的Markdown预览插件",
   "author": "Your Name",
   "authorUrl": "https://github.com/yourusername",
   "isDesktopOnly": false,

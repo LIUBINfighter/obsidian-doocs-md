@@ -1,8 +1,8 @@
 import { App, Plugin } from 'obsidian';
-import { DoocsMdPreviewView, VIEW_TYPE_DOOCS_PREVIEW } from './doocs-md-view';
+import { Md2CardsPreviewView, VIEW_TYPE_DOOCS_PREVIEW } from './cards';
 import { activateView } from './activateView';
 
-interface DoocsMdSettings {
+interface Md2CardsSettings {
 	mySetting: string;
 	previewWidth: string;
 	previewHeight: string;
@@ -13,7 +13,7 @@ interface DoocsMdSettings {
 	widthScale: number;
 }
 
-const DEFAULT_SETTINGS: DoocsMdSettings = {
+const DEFAULT_SETTINGS: Md2CardsSettings = {
 	mySetting: 'default',
 	previewWidth: '100%',
 	previewHeight: 'auto',
@@ -24,9 +24,9 @@ const DEFAULT_SETTINGS: DoocsMdSettings = {
 	widthScale: 1.0
 }
 
-export default class DoocsMd extends Plugin {
-	settings: DoocsMdSettings;
-	view: DoocsMdPreviewView;
+export default class Md2Cards extends Plugin {
+	settings: Md2CardsSettings;
+	view: Md2CardsPreviewView;
 
 	async onload() {
 		await this.loadSettings();
@@ -34,18 +34,18 @@ export default class DoocsMd extends Plugin {
 		// 注册预览视图
 		this.registerView(
 			VIEW_TYPE_DOOCS_PREVIEW,
-			(leaf) => (this.view = new DoocsMdPreviewView(leaf, this))
+			(leaf) => (this.view = new Md2CardsPreviewView(leaf, this))
 		);
 
 		// 添加命令以打开预览视图
 		this.addCommand({
-			id: 'open-doocs-preview',
-			name: '打开Doocs预览',
+			id: 'open-card-preview',
+			name: '打开卡片Cards预览',
 			callback: () => activateView(this.app)
 			});
 		
 		// 添加ribbon图标
-		this.addRibbonIcon('eye', 'Doocs MD 预览', (evt: MouseEvent) => {
+		this.addRibbonIcon('eye', 'md2cards 预览', (evt: MouseEvent) => {
 			activateView(this.app);
 		});
 	}

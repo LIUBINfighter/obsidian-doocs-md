@@ -1,5 +1,5 @@
 import { App } from "obsidian";
-import { VIEW_TYPE_DOOCS_PREVIEW } from "./doocs-md-view";
+import { VIEW_TYPE_DOOCS_PREVIEW } from "./cards";
 
 // 激活预览视图
 export async function activateView(app: App) {

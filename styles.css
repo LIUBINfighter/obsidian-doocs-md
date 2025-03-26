@@ -98,6 +98,49 @@
   color: var(--text-normal);
 }
 
+/* ===== 主题按钮样式 ===== */
+.doocs-md-theme-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--doocs-border-radius);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.doocs-md-theme-btn:hover {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* ===== 复制按钮样式 ===== */
+.doocs-md-copy-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--doocs-border-radius);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.doocs-md-copy-btn:hover {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.doocs-md-copy-btn:active {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
 /* ===== 宽度控制 ===== */
 .doocs-md-width-controls {
   display: flex;
@@ -167,6 +210,73 @@
   background-color: var(--background-modifier-border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin: 10px auto;
+}
+
+/* ===== 预览主题样式 ===== */
+/* 亮色主题 */
+.doocs-md-theme-light {
+  background-color: white;
+  color: #333;
+}
+
+.doocs-md-theme-light .doocs-md-render h1,
+.doocs-md-theme-light .doocs-md-render h2,
+.doocs-md-theme-light .doocs-md-render h3,
+.doocs-md-theme-light .doocs-md-render h4,
+.doocs-md-theme-light .doocs-md-render h5,
+.doocs-md-theme-light .doocs-md-render h6 {
+  color: #222;
+}
+
+.doocs-md-theme-light .doocs-md-render a {
+  color: #0366d6;
+}
+
+.doocs-md-theme-light .doocs-md-render code {
+  background-color: #f6f8fa;
+  color: #24292e;
+}
+
+.doocs-md-theme-light .doocs-md-render pre {
+  background-color: #f6f8fa;
+}
+
+.doocs-md-theme-light .doocs-md-render blockquote {
+  border-left: 4px solid #dfe2e5;
+  color: #6a737d;
+}
+
+/* 暗色主题 */
+.doocs-md-theme-dark {
+  background-color: #1e1e1e;
+  color: #eee;
+}
+
+.doocs-md-theme-dark .doocs-md-render h1,
+.doocs-md-theme-dark .doocs-md-render h2,
+.doocs-md-theme-dark .doocs-md-render h3,
+.doocs-md-theme-dark .doocs-md-render h4,
+.doocs-md-theme-dark .doocs-md-render h5,
+.doocs-md-theme-dark .doocs-md-render h6 {
+  color: #fff;
+}
+
+.doocs-md-theme-dark .doocs-md-render a {
+  color: #58a6ff;
+}
+
+.doocs-md-theme-dark .doocs-md-render code {
+  background-color: #2a2a2a;
+  color: #e6e6e6;
+}
+
+.doocs-md-theme-dark .doocs-md-render pre {
+  background-color: #2a2a2a;
+}
+
+.doocs-md-theme-dark .doocs-md-render blockquote {
+  border-left: 4px solid #444;
+  color: #aaa;
 }
 
 /* ===== 状态指示器 ===== */

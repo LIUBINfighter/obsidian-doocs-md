@@ -10,6 +10,9 @@ interface DoocsMdSettings {
 	// 预览比例相关设置
 	aspectRatio: string;
 	baseWidth: number;
+	
+	// 背景主题设置
+	previewTheme: 'light' | 'dark';
 }
 
 const DEFAULT_SETTINGS: DoocsMdSettings = {
@@ -19,7 +22,10 @@ const DEFAULT_SETTINGS: DoocsMdSettings = {
 	
 	// 默认长宽比设置
 	aspectRatio: '9:16',
-	baseWidth: 375
+	baseWidth: 375,
+	
+	// 默认背景主题
+	previewTheme: 'light'
 }
 
 export default class DoocsMd extends Plugin {

@@ -1,6 +1,5 @@
-import { ItemView, WorkspaceLeaf, MarkdownView, setIcon, Notice, TFile } from "obsidian";
+import { ItemView, WorkspaceLeaf, MarkdownView, setIcon, Notice, TFile, MarkdownRenderer } from "obsidian";
 import DoocsMd from "./main";
-import { MarkdownRender } from "./render";
 
 // 定义视图类型
 export const VIEW_TYPE_DOOCS_PREVIEW = 'doocs-md-preview';
@@ -97,6 +96,9 @@ export class DoocsMdPreviewView extends ItemView {
 		);
 		
 		this.updatePreviewFromActiveFile();
+		
+		// 初始应用主题
+		this.applyTheme();
 	}
 
 	async onClose() {
@@ -197,6 +199,9 @@ export class DoocsMdPreviewView extends ItemView {
 			console.error("Markdown渲染失败:", error);
 			renderContainer.innerHTML = this.fallbackParseMarkdown(content);
 		}
+		
+		// 确保主题被应用
+		this.applyTheme();
 	}
 	
 	// 创建工具栏
@@ -245,6 +250,35 @@ export class DoocsMdPreviewView extends ItemView {
 			}
 		});
 		
+		// 添加主题切换按钮
+		const themeBtn = this.toolbarEl.createEl("button", { 
+			cls: "doocs-md-theme-btn",
+			attr: { title: "切换背景颜色" }
+		});
+		
+		// 根据当前主题设置图标
+		this.setThemeButtonIcon(themeBtn);
+		
+		// 切换主题事件
+		themeBtn.addEventListener("click", () => {
+			// 切换主题
+			this.toggleTheme();
+			// 更新按钮图标
+			this.setThemeButtonIcon(themeBtn);
+		});
+		
+		// 添加复制HTML按钮
+		const copyBtn = this.toolbarEl.createEl("button", { 
+			cls: "doocs-md-copy-btn",
+			attr: { title: "复制HTML到剪贴板" }
+		});
+		setIcon(copyBtn, "clipboard-copy");
+		
+		// 复制HTML事件
+		copyBtn.addEventListener("click", () => {
+			this.copyHtmlToClipboard();
+		});
+		
 		// 添加聚焦状态指示器
 		const focusIndicator = this.toolbarEl.createDiv({ cls: "doocs-md-focus-indicator" });
 		focusIndicator.setText("预览聚焦时将暂停自动更新");
@@ -260,6 +294,47 @@ export class DoocsMdPreviewView extends ItemView {
 			this.updatePreviewFromActiveFile();
 			new Notice("预览已刷新");
 		});
+	}
+	
+	// 设置主题按钮图标
+	setThemeButtonIcon(button: HTMLElement) {
+		// 清空按钮内容
+		button.empty();
+		
+		// 根据当前主题设置图标
+		if (this.plugin.settings.previewTheme === 'light') {
+			setIcon(button, "sun");
+		} else {
+			setIcon(button, "moon");
+		}
+	}
+	
+	// 切换主题
+	toggleTheme() {
+		// 切换设置中的主题
+		this.plugin.settings.previewTheme = 
+			this.plugin.settings.previewTheme === 'light' ? 'dark' : 'light';
+		
+		// 保存设置
+		this.plugin.saveSettings();
+		
+		// 应用新主题
+		this.applyTheme();
+		
+		// 提示用户
+		new Notice(`预览背景已切换为${this.plugin.settings.previewTheme === 'light' ? '亮色' : '暗色'}`);
+	}
+	
+	// 应用主题
+	applyTheme() {
+		if (!this.previewEl) return;
+		
+		// 移除所有主题类
+		this.previewEl.removeClass('doocs-md-theme-light');
+		this.previewEl.removeClass('doocs-md-theme-dark');
+		
+		// 添加当前主题类
+		this.previewEl.addClass(`doocs-md-theme-${this.plugin.settings.previewTheme}`);
 	}
 	
 	// 应用预览尺寸
@@ -287,6 +362,41 @@ export class DoocsMdPreviewView extends ItemView {
 		
 		// 中心对齐预览容器
 		this.previewEl.style.margin = "0 auto";
+		
+		// 确保主题也被应用
+		this.applyTheme();
+	}
+
+	// 复制HTML到剪贴板
+	async copyHtmlToClipboard() {
+		if (!this.previewEl) return;
+		
+		try {
+			// 获取渲染区域
+			const renderContainer = this.previewEl.querySelector('.doocs-md-render');
+			if (!renderContainer) {
+				new Notice("没有找到渲染内容");
+				return;
+			}
+			
+			// 获取HTML内容
+			const htmlContent = renderContainer.innerHTML;
+			
+			// 检查内容是否为空
+			if (!htmlContent.trim()) {
+				new Notice("没有内容可复制");
+				return;
+			}
+			
+			// 复制到剪贴板
+			await navigator.clipboard.writeText(htmlContent);
+			
+			// 显示成功通知
+			new Notice("HTML已复制到剪贴板");
+		} catch (error) {
+			console.error("复制HTML失败:", error);
+			new Notice("复制HTML失败: " + error);
+		}
 	}
 
 	// 备用的简单Markdown解析器

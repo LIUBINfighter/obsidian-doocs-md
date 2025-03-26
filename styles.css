@@ -304,7 +304,7 @@
   background-color: var(--interactive-accent);
 }
 
-.doocs-md-focus-indicator {
+/* .doocs-md-focus-indicator {
   font-size: 12px;
   color: var(--text-muted);
   margin-left: auto;
@@ -318,7 +318,7 @@
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
   opacity: 1;
-}
+} */
 
 .doocs-md-file-path {
   font-size: 12px;
@@ -328,4 +328,28 @@
   background-color: var(--background-secondary);
   border-radius: var(--doocs-border-radius);
   display: inline-block;
+}
+
+/* 格式选择器样式 */
+.doocs-md-format-select {
+  background-color: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--doocs-border-radius);
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--text-normal);
+  cursor: pointer;
+  margin-left: 12px;
+  min-width: 120px;
+  transition: var(--doocs-transition);
+}
+
+.doocs-md-format-select:hover, .doocs-md-format-select:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.doocs-md-format-select option {
+  background-color: var(--background-primary);
+  color: var(--text-normal);
 }

@@ -1,4 +1,13 @@
 import { MarkdownRenderer, Component, TFile } from "obsidian";
+import { WechatParser } from "./parsers/wechatParser";
+
+/**
+ * 渲染格式类型
+ */
+export enum RenderFormat {
+    DEFAULT = "default",
+    WECHAT = "wechat"
+}
 
 /**
  * Markdown内容渲染器类
@@ -11,22 +20,29 @@ export class MarkdownRender {
      * @param container 目标HTML容器
      * @param filePath 文件路径
      * @param component 组件实例
+     * @param format 渲染格式
      * @returns Promise
      */
     static async renderMarkdownToElement(
         content: string,
         container: HTMLElement,
         filePath: string,
-        component: Component
+        component: Component,
+        format: RenderFormat = RenderFormat.DEFAULT
     ): Promise<void> {
         try {
-            // 使用Obsidian的Markdown渲染器
-            await MarkdownRenderer.renderMarkdown(
-                content,
-                container,
-                filePath,
-                component
-            );
+            if (format === RenderFormat.WECHAT) {
+                // 使用微信公众号格式解析器
+                WechatParser.renderToContainer(content, container);
+            } else {
+                // 使用Obsidian的Markdown渲染器
+                await MarkdownRenderer.renderMarkdown(
+                    content,
+                    container,
+                    filePath,
+                    component
+                );
+            }
         } catch (error) {
             console.error("Markdown渲染失败:", error);
             container.innerHTML = this.fallbackParseMarkdown(content);

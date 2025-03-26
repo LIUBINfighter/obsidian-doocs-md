@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, MarkdownView, MarkdownRenderer, setIcon, Notice, TFile, Slider } from "obsidian";
+import { ItemView, WorkspaceLeaf, MarkdownView, MarkdownRenderer, setIcon, Notice, TFile } from "obsidian";
 import Md2Cards from "./main";
 
 // 定义视图类型
@@ -9,7 +9,7 @@ export class Md2CardsPreviewView extends ItemView {
 	private plugin: Md2Cards;
 	private toolbarEl: HTMLElement;
 	private previewEl: HTMLElement;
-	private widthControlsEl: HTMLElement;
+	private paginationEl: HTMLElement;
 	private isFocused: boolean = false;
 	private updateDebounceTimeout: number | null = null;
 	private debounceDelay: number = 1000; // 1秒的防抖延迟
@@ -18,27 +18,13 @@ export class Md2CardsPreviewView extends ItemView {
 	private lastActiveMarkdownFile: TFile | null = null;
 	private lastContent: string = "";
 	
-	// 可用的预览框长宽比例选项
-	private aspectRatioOptions = [
-		{ ratio: 'auto', baseWidth: 800, label: '自适应' },
-		{ ratio: '16:9', baseWidth: 375, label: '16:9 (主流手机)' },
-		{ ratio: '9:19.5', baseWidth: 375, label: '9:19.5 (iPhone X+)' },
-		{ ratio: '9:20', baseWidth: 375, label: '9:20 (全面屏手机)' },
-		{ ratio: '3:4', baseWidth: 768, label: '3:4 (iPad竖屏)' },
-		{ ratio: '4:3', baseWidth: 768, label: '4:3 (iPad横屏)' },
-		{ ratio: '2:3', baseWidth: 768, label: '2:3 (Surface竖屏)' },
-		{ ratio: '1:1', baseWidth: 500, label: '1:1 (正方形)' }
-	];
+	// 卡片数据
+	private cards: string[] = [];
+	private currentCardIndex: number = 0;
 	
-	// 宽度缩放因子 (默认为1.0)
-	private widthScale: number = 1.0;
-
 	constructor(leaf: WorkspaceLeaf, plugin: Md2Cards) {
 		super(leaf);
 		this.plugin = plugin;
-		
-		// 从设置中读取宽度缩放因子
-		this.widthScale = this.plugin.settings.widthScale || 1.0;
 	}
 
 	getViewType(): string {
@@ -61,6 +47,9 @@ export class Md2CardsPreviewView extends ItemView {
 		this.previewEl = containerEl.createDiv({ cls: "md-notes-preview-container" });
 		this.applyPreviewSize();
 		
+			// 创建分页控件
+		this.paginationEl = containerEl.createDiv({ cls: "md-notes-pagination" });
+		
 		// 添加焦点事件监听
 		this.registerDomEvent(this.containerEl, 'focusin', () => {
 			this.isFocused = true;
@@ -78,10 +67,7 @@ export class Md2CardsPreviewView extends ItemView {
 		// 监听活动文件变化
 		this.registerEvent(
 			this.app.workspace.on('active-leaf-change', () => {
-				// 获取当前活动视图
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				
-				// 如果当前活动的是Markdown视图，则更新最后活动的Markdown文件
 				if (activeView && activeView.file) {
 					this.lastActiveMarkdownFile = activeView.file;
 					this.debouncedUpdatePreview();
@@ -93,8 +79,6 @@ export class Md2CardsPreviewView extends ItemView {
 		this.registerEvent(
 			this.app.workspace.on('editor-change', (editor) => {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				
-				// 确认编辑器变化发生在Markdown视图中
 				if (activeView && activeView.file) {
 					this.lastActiveMarkdownFile = activeView.file;
 					this.debouncedUpdatePreview();
@@ -148,14 +132,12 @@ export class Md2CardsPreviewView extends ItemView {
 			this.lastContent = content;
 		} else if (this.lastActiveMarkdownFile) {
 			// 使用最后一个活动的Markdown文件
-			// 通过文件路径打开文件内容
 			try {
 				content = await this.app.vault.read(this.lastActiveMarkdownFile);
 				filePath = this.lastActiveMarkdownFile.path;
 				this.lastContent = content;
 			} catch (error) {
 				console.error("无法读取最后活动的Markdown文件:", error);
-				// 如果无法读取，使用上次的内容
 				content = this.lastContent;
 				filePath = this.lastActiveMarkdownFile.path;
 			}
@@ -167,7 +149,34 @@ export class Md2CardsPreviewView extends ItemView {
 			return;
 		}
 		
-		this.renderMarkdown(content, filePath);
+		// 解析内容为卡片
+		this.parseContentToCards(content);
+		
+		// 渲染当前卡片
+		this.renderCurrentCard(filePath);
+		
+		// 更新分页控件
+		this.updatePagination();
+	}
+	
+	// 将Markdown内容分割为卡片
+	parseContentToCards(content: string) {
+		// 使用二级标题作为分隔符
+		this.cards = content.split(/^## /m).filter(Boolean);
+		
+		// 如果第一段不是以## 开头，需要特殊处理
+		if (!content.trim().startsWith('## ')) {
+			if (this.cards.length > 0) {
+				// 如果有卡片，将第一段内容添加## 前缀
+				this.cards[0] = '## ' + this.cards[0];
+			}
+		} else {
+			// 如果内容以## 开头，为所有卡片添加## 前缀
+			this.cards = this.cards.map(card => '## ' + card);
+		}
+		
+		// 重置当前卡片索引
+		this.currentCardIndex = 0;
 	}
 	
 	// 显示无文件消息
@@ -175,10 +184,13 @@ export class Md2CardsPreviewView extends ItemView {
 		this.previewEl.empty();
 		const noFileEl = this.previewEl.createDiv({ cls: 'md-notes-no-file' });
 		noFileEl.setText("没有打开的Markdown文件");
+		
+		// 清空分页控件
+		this.paginationEl.empty();
 	}
 	
-	// 渲染Markdown内容
-	async renderMarkdown(content: string, filePath: string) {
+	// 渲染当前卡片
+	async renderCurrentCard(filePath: string) {
 		// 清空旧内容
 		this.previewEl.empty();
 		
@@ -188,74 +200,167 @@ export class Md2CardsPreviewView extends ItemView {
 			pathIndicator.setText(`预览: ${this.lastActiveMarkdownFile.basename}`);
 		}
 		
+		// 检查是否有卡片
+		if (this.cards.length === 0) {
+			const noCardsEl = this.previewEl.createDiv({ cls: 'md-notes-no-cards' });
+			noCardsEl.setText("未找到卡片内容，请确保文档中有二级标题(## )");
+			return;
+		}
+		
 		// 创建渲染容器
 		const renderContainer = this.previewEl.createDiv({ cls: "md-notes-render" });
 		
 		try {
+			// 获取当前卡片内容
+			const cardContent = this.cards[this.currentCardIndex];
+			
 			// 使用Obsidian的Markdown渲染器进行渲染
 			await MarkdownRenderer.renderMarkdown(
-				content,
+				cardContent,
 				renderContainer,
 				filePath,
 				this
 			);
 		} catch (error) {
-			// 如果渲染失败，使用简单的备用解析器
 			console.error("Markdown渲染失败:", error);
-			renderContainer.innerHTML = this.fallbackParseMarkdown(content);
+			renderContainer.innerHTML = "<p>渲染失败，请检查Markdown格式</p>";
 		}
+	}
+	
+	// 更新分页控件
+	updatePagination() {
+		this.paginationEl.empty();
+		
+		if (this.cards.length <= 1) {
+			return; // 只有一个卡片或没有卡片时不显示分页
+		}
+		
+		// 创建分页容器
+		const paginationContainer = this.paginationEl.createDiv({ cls: "md-notes-pagination-container" });
+		
+		// 上一页按钮
+		const prevBtn = paginationContainer.createEl("button", { 
+			cls: "md-notes-pagination-btn md-notes-prev-btn",
+			attr: { title: "上一页" }
+		});
+		setIcon(prevBtn, "arrow-left");
+		prevBtn.addEventListener("click", () => {
+			if (this.currentCardIndex > 0) {
+				this.currentCardIndex--;
+				this.renderCurrentCard(this.lastActiveMarkdownFile?.path || "");
+				this.updatePagination();
+			}
+		});
+		
+		// 页码指示
+		const pageIndicator = paginationContainer.createDiv({ cls: "md-notes-page-indicator" });
+		pageIndicator.setText(`${this.currentCardIndex + 1} / ${this.cards.length}`);
+		
+		// 下一页按钮
+		const nextBtn = paginationContainer.createEl("button", { 
+			cls: "md-notes-pagination-btn md-notes-next-btn",
+			attr: { title: "下一页" }
+		});
+		setIcon(nextBtn, "arrow-right");
+		nextBtn.addEventListener("click", () => {
+			if (this.currentCardIndex < this.cards.length - 1) {
+				this.currentCardIndex++;
+				this.renderCurrentCard(this.lastActiveMarkdownFile?.path || "");
+				this.updatePagination();
+			}
+		});
 	}
 	
 	// 创建工具栏
 	createToolbar() {
 		this.toolbarEl.empty();
 		
-		// 工具栏标题
-		const titleEl = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-title" });
-		titleEl.setText("预览比例：");
+		// 工具栏左侧 - 长宽比选择器
+		const leftSection = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-section" });
 		
-		// 长宽比选择器
-		const ratioSelectEl = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-ratios" });
+		// 比例选择标签
+		const ratioLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
+		ratioLabel.setText("预览比例：");
 		
-		// 添加长宽比选项
-		this.aspectRatioOptions.forEach(option => {
-			const ratioBtn = ratioSelectEl.createEl("button", { 
-				cls: "md-notes-ratio-btn",
+		// 创建下拉选择框
+		const ratioSelect = leftSection.createEl("select", { cls: "md-notes-ratio-select" });
+		
+		// 添加选项
+		const ratioOptions = [
+			{ value: "1:1", label: "1:1 (正方形)" },
+			{ value: "3:4", label: "3:4 (竖屏)" },
+			{ value: "4:3", label: "4:3 (横屏)" }
+		];
+		
+		ratioOptions.forEach(option => {
+			const optionEl = ratioSelect.createEl("option", { 
+				value: option.value,
 				text: option.label
 			});
 			
-			// 如果是当前选中的比例，添加active类
-			if (this.plugin.settings.aspectRatio === option.ratio) {
-				ratioBtn.addClass("active");
+			if (this.plugin.settings.aspectRatio === option.value) {
+				optionEl.selected = true;
 			}
-			
-			ratioBtn.addEventListener("click", () => {
-				// 更新设置
-				this.plugin.settings.aspectRatio = option.ratio;
-				this.plugin.settings.baseWidth = option.baseWidth;
-				this.plugin.saveSettings();
-				
-				// 移除所有按钮的active类
-				ratioSelectEl.findAll(".md-notes-ratio-btn").forEach(btn => 
-					btn.removeClass("active"));
-				
-				// 为当前按钮添加active类
-				ratioBtn.addClass("active");
-				
-				// 应用新尺寸
-				this.applyPreviewSize();
-				
-				// 提示用户
-				new Notice(`预览比例已设置为${option.label}`);
-			});
 		});
 		
-		// 添加聚焦状态指示器
-		const focusIndicator = this.toolbarEl.createDiv({ cls: "md-notes-focus-indicator" });
-		focusIndicator.setText("预览聚焦时将暂停自动更新");
+		// 监听选择变化
+		ratioSelect.addEventListener("change", () => {
+			this.plugin.settings.aspectRatio = ratioSelect.value;
+			
+			// 根据长宽比设置基础宽度
+			if (ratioSelect.value === "1:1") {
+				this.plugin.settings.baseWidth = 500;
+			} else {
+				this.plugin.settings.baseWidth = 768;
+			}
+			
+			this.plugin.saveSettings();
+			this.applyPreviewSize();
+			new Notice(`预览比例已设置为 ${ratioSelect.value}`);
+		});
+		
+		// 工具栏右侧 - 操作按钮
+		const rightSection = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-section" });
+		
+		// 宽度调整控件
+		const widthControls = rightSection.createDiv({ cls: "md-notes-width-controls" });
+		
+		// 宽度标签
+		const widthLabel = widthControls.createDiv({ cls: "md-notes-toolbar-label" });
+		widthLabel.setText("宽度：");
+		
+		// 宽度值显示
+		const widthValueEl = widthControls.createDiv({ cls: "md-notes-width-value" });
+		widthValueEl.setText(`${Math.round(this.plugin.settings.widthScale * 100)}%`);
+		
+		// 减小宽度按钮
+		const decreaseBtn = widthControls.createEl("button", {
+			cls: "md-notes-width-btn",
+			text: "-"
+		});
+		
+		// 增加宽度按钮
+		const increaseBtn = widthControls.createEl("button", {
+			cls: "md-notes-width-btn",
+			text: "+"
+		});
+		
+		// 减小宽度事件
+		decreaseBtn.addEventListener("click", () => {
+			// 限制最小缩放为0.5 (50%)
+			this.plugin.settings.widthScale = Math.max(0.5, this.plugin.settings.widthScale - 0.1);
+			this.updateWidthScale(widthValueEl);
+		});
+		
+		// 增加宽度事件
+		increaseBtn.addEventListener("click", () => {
+			// 限制最大缩放为2.0 (200%)
+			this.plugin.settings.widthScale = Math.min(2.0, this.plugin.settings.widthScale + 0.1);
+			this.updateWidthScale(widthValueEl);
+		});
 		
 		// 刷新按钮
-		const refreshBtn = this.toolbarEl.createEl("button", { 
+		const refreshBtn = rightSection.createEl("button", { 
 			cls: "md-notes-refresh-btn",
 			attr: { title: "刷新预览" }
 		});
@@ -266,71 +371,23 @@ export class Md2CardsPreviewView extends ItemView {
 			new Notice("预览已刷新");
 		});
 		
-		// 创建宽度调整控件容器
-		this.widthControlsEl = this.toolbarEl.createDiv({ cls: "md-notes-width-controls" });
-		this.createWidthControls();
-	}
-	
-	// 创建宽度调整控件
-	createWidthControls() {
-		this.widthControlsEl.empty();
-		
-		// 宽度控制标题
-		const widthTitleEl = this.widthControlsEl.createDiv({ cls: "md-notes-width-title" });
-		widthTitleEl.setText("预览宽度：");
-		
-		// 创建宽度显示
-		const widthValueEl = this.widthControlsEl.createDiv({ cls: "md-notes-width-value" });
-		widthValueEl.setText(`${Math.round(this.widthScale * 100)}%`);
-		
-		// 创建减小宽度按钮
-		const decreaseBtn = this.widthControlsEl.createEl("button", {
-			cls: "md-notes-width-btn",
-			text: "-"
+		// 导出图片按钮
+		const exportBtn = rightSection.createEl("button", { 
+			cls: "md-notes-export-btn",
+			attr: { title: "导出所有卡片为图片" }
 		});
-		
-		// 创建增加宽度按钮
-		const increaseBtn = this.widthControlsEl.createEl("button", {
-			cls: "md-notes-width-btn",
-			text: "+"
-		});
-		
-		// 减小宽度事件
-		decreaseBtn.addEventListener("click", () => {
-			// 限制最小缩放为0.5 (50%)
-			this.widthScale = Math.max(0.5, this.widthScale - 0.1);
-			this.updateWidthScale();
-		});
-		
-		// 增加宽度事件
-		increaseBtn.addEventListener("click", () => {
-			// 限制最大缩放为2.0 (200%)
-			this.widthScale = Math.min(2.0, this.widthScale + 0.1);
-			this.updateWidthScale();
-		});
-		
-		// 重置宽度按钮
-		const resetBtn = this.widthControlsEl.createEl("button", {
-			cls: "md-notes-width-reset-btn",
-			text: "重置"
-		});
-		
-		resetBtn.addEventListener("click", () => {
-			this.widthScale = 1.0;
-			this.updateWidthScale();
+		setIcon(exportBtn, "download");
+		exportBtn.addEventListener("click", () => {
+			this.exportAllCardsAsImages();
 		});
 	}
 	
 	// 更新宽度缩放
-	updateWidthScale() {
+	updateWidthScale(widthValueEl: HTMLElement) {
 		// 更新宽度显示
-		const widthValueEl = this.widthControlsEl.querySelector(".md-notes-width-value");
-		if (widthValueEl) {
-			widthValueEl.setText(`${Math.round(this.widthScale * 100)}%`);
-		}
+		widthValueEl.setText(`${Math.round(this.plugin.settings.widthScale * 100)}%`);
 		
 		// 保存设置
-		this.plugin.settings.widthScale = this.widthScale;
 		this.plugin.saveSettings();
 		
 		// 应用新尺寸
@@ -341,55 +398,40 @@ export class Md2CardsPreviewView extends ItemView {
 	applyPreviewSize() {
 		if (!this.previewEl) return;
 		
-		const { aspectRatio, baseWidth } = this.plugin.settings;
+		const { aspectRatio, baseWidth, widthScale } = this.plugin.settings;
 		
 		// 调整后的宽度
-		const scaledWidth = baseWidth * this.widthScale;
+		const scaledWidth = baseWidth * widthScale;
 		
-		if (aspectRatio === 'auto') {
-			// 自适应模式
-			this.previewEl.style.width = `${scaledWidth}px`;
-			this.previewEl.style.height = 'auto';
-			this.previewEl.style.maxHeight = "none";
-			this.previewEl.style.overflow = "visible";
-		} else { //- 注意：我们使用高宽比例格式 (h:w)，而不是宽高比 (w:h)
-			// 计算宽高比
-			const [widthRatio, heightRatio] = aspectRatio.split(':').map(Number);
-			// 根据比例计算高度
-			const height = (scaledWidth * heightRatio) / widthRatio;
-			
-			this.previewEl.style.width = `${scaledWidth}px`;
-			this.previewEl.style.height = `${height}px`;
-			this.previewEl.style.overflow = "auto";
-		}
+		// 计算宽高比
+		const [widthRatio, heightRatio] = aspectRatio.split(':').map(Number);
+		// 根据比例计算高度
+		const height = (scaledWidth * heightRatio) / widthRatio;
+		
+		this.previewEl.style.width = `${scaledWidth}px`;
+		this.previewEl.style.height = `${height}px`;
+		this.previewEl.style.overflow = "auto";
 		
 		// 中心对齐预览容器
 		this.previewEl.style.margin = "0 auto";
 	}
-
-	// 备用的简单Markdown解析器
-	fallbackParseMarkdown(markdown: string): string {
-		let html = markdown
-			// 标题
-			.replace(/^# (.*$)/gm, '<h1>$1</h1>')
-			.replace(/^## (.*$)/gm, '<h2>$1</h2>')
-			.replace(/^### (.*$)/gm, '<h3>$1</h3>')
-			// 加粗
-			.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-			// 斜体
-			.replace(/\*(.*?)\*/g, '<em>$1</em>')
-			// 链接
-			.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-			// 列表
-			.replace(/^\- (.*$)/gm, '<li>$1</li>')
-			// 代码块
-			.replace(/```(.*?)\n([\s\S]*?)```/gm, '<pre><code class="language-$1">$2</code></pre>')
-			// 行内代码
-			.replace(/`(.*?)`/g, '<code>$1</code>');
+	
+	// 导出所有卡片为图片的方法
+	async exportAllCardsAsImages() {
+		// 检查是否有卡片
+		if (this.cards.length === 0) {
+			new Notice("没有可导出的卡片");
+			return;
+		}
 		
-		// 换行处理
-		html = `<div>${html.split('\n').join('<br>')}</div>`;
+		// 检查是否有活动文件
+		if (!this.lastActiveMarkdownFile) {
+			new Notice("没有活动的Markdown文件");
+			return;
+		}
 		
-		return html;
+		new Notice("卡片导出功能正在开发中");
+		// 在此实现导出图片功能
+		// 这里需要使用HTML-to-Image或类似库来实现
 	}
 }

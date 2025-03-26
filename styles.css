@@ -1,94 +1,190 @@
-/*
+/* Doocs MD 预览插件样式 */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* 通用变量 */
+:root {
+  --doocs-btn-padding: 4px 8px;
+  --doocs-border-radius: 4px;
+  --doocs-transition: all 0.2s ease;
+}
 
-If your plugin does not need CSS, delete this file.
-
-*/
-
-/* 工具栏样式 */
+/* ===== 工具栏样式 ===== */
 .doocs-md-toolbar {
-    display: flex;
-    align-items: center;
-    padding: 8px 16px;
-    border-bottom: 1px solid var(--background-modifier-border);
-    background-color: var(--background-secondary);
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background-color: var(--background-secondary);
+  flex-wrap: wrap;
 }
 
-.doocs-md-toolbar-title {
-    font-weight: 500;
-    margin-right: 8px;
+.doocs-md-toolbar-title, .doocs-md-width-title {
+  font-weight: 500;
+  margin-right: 8px;
 }
 
-.doocs-md-toolbar-sizes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    flex: 1;
+.doocs-md-toolbar-ratios, .doocs-md-toolbar-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
 }
 
-.doocs-md-size-btn {
-    background-color: var(--background-modifier-form-field);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* 按钮通用样式 */
+.doocs-md-ratio-btn, .doocs-md-size-btn, .doocs-md-width-reset-btn {
+  background-color: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--doocs-border-radius);
+  padding: var(--doocs-btn-padding);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--doocs-transition);
 }
 
-.doocs-md-size-btn:hover {
-    background-color: var(--interactive-hover);
+.doocs-md-ratio-btn:hover, .doocs-md-size-btn:hover, .doocs-md-width-btn:hover, .doocs-md-width-reset-btn:hover {
+  background-color: var(--interactive-hover);
 }
 
-.doocs-md-size-btn.active {
-    background-color: var(--interactive-accent);
-    color: var(--text-on-accent);
+.doocs-md-ratio-btn.active, .doocs-md-size-btn.active {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
 }
 
+/* 刷新按钮 */
 .doocs-md-refresh-btn {
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--doocs-border-radius);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .doocs-md-refresh-btn:hover {
-    background-color: var(--background-modifier-hover);
-    color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+  color: var(--text-normal);
 }
 
-/* 预览容器样式 */
+/* ===== 宽度控制 ===== */
+.doocs-md-width-controls {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--background-modifier-border);
+  width: 100%;
+}
+
+.doocs-md-width-value {
+  min-width: 40px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--text-accent);
+}
+
+.doocs-md-width-btn {
+  background-color: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--doocs-border-radius);
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 4px;
+  transition: var(--doocs-transition);
+}
+
+.doocs-md-width-reset-btn {
+  margin-left: 12px;
+  background-color: var(--background-secondary-alt);
+}
+
+/* ===== 预览容器 ===== */
 .doocs-md-preview-container {
-    margin: 0 auto;
-    padding: 20px;
-    overflow: auto;
-    background-color: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  padding: 20px;
+  overflow: auto;
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--doocs-border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: width 0.3s ease, height 0.3s ease;
+  max-width: 100%;
 }
 
-/* 预览渲染区域样式 */
+.doocs-md-view-focused .doocs-md-preview-container {
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
 .doocs-md-render {
-    font-family: var(--font-text);
-    line-height: 1.6;
+  font-family: var(--font-text);
+  line-height: 1.6;
 }
 
-/* 无文件打开时的提示 */
+/* 设备边框 */
+.doocs-md-device-frame {
+  position: relative;
+  padding: 10px;
+  border-radius: 20px;
+  background-color: var(--background-modifier-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin: 10px auto;
+}
+
+/* ===== 状态指示器 ===== */
 .doocs-md-no-file {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100px;
-    color: var(--text-muted);
-    font-size: 16px;
-    font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  color: var(--text-muted);
+  font-size: 16px;
+  font-style: italic;
+}
+
+.doocs-md-toolbar::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 8px;
+  display: none;
+}
+
+.doocs-md-view-focused .doocs-md-toolbar::after {
+  display: block;
+  background-color: var(--interactive-accent);
+}
+
+.doocs-md-focus-indicator {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: auto;
+  padding: var(--doocs-btn-padding);
+  background: var(--background-modifier-form-field);
+  border-radius: var(--doocs-border-radius);
+  opacity: 0.7;
+}
+
+.doocs-md-view-focused .doocs-md-focus-indicator {
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  opacity: 1;
+}
+
+.doocs-md-file-path {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  padding: 4px 8px;
+  background-color: var(--background-secondary);
+  border-radius: var(--doocs-border-radius);
+  display: inline-block;
 }

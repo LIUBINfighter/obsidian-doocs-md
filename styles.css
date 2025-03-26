@@ -17,9 +17,39 @@
   flex-wrap: wrap;
 }
 
-.doocs-md-toolbar-title, .doocs-md-width-title {
+.doocs-md-toolbar-title {
   font-weight: 500;
   margin-right: 8px;
+}
+
+/* 比例选择容器 */
+.doocs-md-ratio-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* 下拉选择框样式 */
+.doocs-md-ratio-select {
+  background-color: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--doocs-border-radius);
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--text-normal);
+  cursor: pointer;
+  min-width: 180px;
+  transition: var(--doocs-transition);
+}
+
+.doocs-md-ratio-select:hover, .doocs-md-ratio-select:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.doocs-md-ratio-select option {
+  background-color: var(--background-primary);
+  color: var(--text-normal);
 }
 
 .doocs-md-toolbar-ratios, .doocs-md-toolbar-sizes {
@@ -60,6 +90,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: 8px;
 }
 
 .doocs-md-refresh-btn:hover {

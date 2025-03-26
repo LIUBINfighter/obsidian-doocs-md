@@ -1,5 +1,6 @@
-import { ItemView, WorkspaceLeaf, MarkdownView, MarkdownRenderer, setIcon, Notice, TFile, Slider } from "obsidian";
+import { ItemView, WorkspaceLeaf, MarkdownView, setIcon, Notice, TFile } from "obsidian";
 import DoocsMd from "./main";
+import { MarkdownRender } from "./render";
 
 // 定义视图类型
 export const VIEW_TYPE_DOOCS_PREVIEW = 'doocs-md-preview';
@@ -9,7 +10,6 @@ export class DoocsMdPreviewView extends ItemView {
 	private plugin: DoocsMd;
 	private toolbarEl: HTMLElement;
 	private previewEl: HTMLElement;
-	private widthControlsEl: HTMLElement;
 	private isFocused: boolean = false;
 	private updateDebounceTimeout: number | null = null;
 	private debounceDelay: number = 1000; // 1秒的防抖延迟
@@ -21,7 +21,7 @@ export class DoocsMdPreviewView extends ItemView {
 	// 可用的预览框长宽比例选项
 	private aspectRatioOptions = [
 		{ ratio: 'auto', baseWidth: 800, label: '自适应' },
-		{ ratio: '16:9', baseWidth: 375, label: '16:9 (主流手机)' },
+		{ ratio: '9:16', baseWidth: 375, label: '9:16 (主流手机)' },
 		{ ratio: '9:19.5', baseWidth: 375, label: '9:19.5 (iPhone X+)' },
 		{ ratio: '9:20', baseWidth: 375, label: '9:20 (全面屏手机)' },
 		{ ratio: '3:4', baseWidth: 768, label: '3:4 (iPad竖屏)' },
@@ -30,15 +30,9 @@ export class DoocsMdPreviewView extends ItemView {
 		{ ratio: '1:1', baseWidth: 500, label: '1:1 (正方形)' }
 	];
 	
-	// 宽度缩放因子 (默认为1.0)
-	private widthScale: number = 1.0;
-
 	constructor(leaf: WorkspaceLeaf, plugin: DoocsMd) {
 		super(leaf);
 		this.plugin = plugin;
-		
-		// 从设置中读取宽度缩放因子
-		this.widthScale = this.plugin.settings.widthScale || 1.0;
 	}
 
 	getViewType(): string {
@@ -102,7 +96,6 @@ export class DoocsMdPreviewView extends ItemView {
 			})
 		);
 		
-		// 初始更新预览
 		this.updatePreviewFromActiveFile();
 	}
 
@@ -210,44 +203,46 @@ export class DoocsMdPreviewView extends ItemView {
 	createToolbar() {
 		this.toolbarEl.empty();
 		
+		// 创建预览比例选择栏
+		const ratioContainerEl = this.toolbarEl.createDiv({ cls: "doocs-md-ratio-container" });
+		
 		// 工具栏标题
-		const titleEl = this.toolbarEl.createDiv({ cls: "doocs-md-toolbar-title" });
+		const titleEl = ratioContainerEl.createDiv({ cls: "doocs-md-toolbar-title" });
 		titleEl.setText("预览比例：");
 		
-		// 长宽比选择器
-		const ratioSelectEl = this.toolbarEl.createDiv({ cls: "doocs-md-toolbar-ratios" });
+		// 创建下拉选择框
+		const selectEl = ratioContainerEl.createEl("select", { cls: "doocs-md-ratio-select" });
 		
 		// 添加长宽比选项
 		this.aspectRatioOptions.forEach(option => {
-			const ratioBtn = ratioSelectEl.createEl("button", { 
-				cls: "doocs-md-ratio-btn",
-				text: option.label
+			const optionEl = selectEl.createEl("option", {
+				text: option.label,
+				value: option.ratio
 			});
 			
-			// 如果是当前选中的比例，添加active类
+			// 设置当前选中项
 			if (this.plugin.settings.aspectRatio === option.ratio) {
-				ratioBtn.addClass("active");
+				optionEl.selected = true;
 			}
+		});
+		
+		// 下拉框选择事件
+		selectEl.addEventListener("change", (e) => {
+			const target = e.target as HTMLSelectElement;
+			const selectedOption = this.aspectRatioOptions.find(option => option.ratio === target.value);
 			
-			ratioBtn.addEventListener("click", () => {
+			if (selectedOption) {
 				// 更新设置
-				this.plugin.settings.aspectRatio = option.ratio;
-				this.plugin.settings.baseWidth = option.baseWidth;
+				this.plugin.settings.aspectRatio = selectedOption.ratio;
+				this.plugin.settings.baseWidth = selectedOption.baseWidth;
 				this.plugin.saveSettings();
-				
-				// 移除所有按钮的active类
-				ratioSelectEl.findAll(".doocs-md-ratio-btn").forEach(btn => 
-					btn.removeClass("active"));
-				
-				// 为当前按钮添加active类
-				ratioBtn.addClass("active");
 				
 				// 应用新尺寸
 				this.applyPreviewSize();
 				
 				// 提示用户
-				new Notice(`预览比例已设置为${option.label}`);
-			});
+				new Notice(`预览比例已设置为${selectedOption.label}`);
+			}
 		});
 		
 		// 添加聚焦状态指示器
@@ -265,76 +260,6 @@ export class DoocsMdPreviewView extends ItemView {
 			this.updatePreviewFromActiveFile();
 			new Notice("预览已刷新");
 		});
-		
-		// 创建宽度调整控件容器
-		this.widthControlsEl = this.toolbarEl.createDiv({ cls: "doocs-md-width-controls" });
-		this.createWidthControls();
-	}
-	
-	// 创建宽度调整控件
-	createWidthControls() {
-		this.widthControlsEl.empty();
-		
-		// 宽度控制标题
-		const widthTitleEl = this.widthControlsEl.createDiv({ cls: "doocs-md-width-title" });
-		widthTitleEl.setText("预览宽度：");
-		
-		// 创建宽度显示
-		const widthValueEl = this.widthControlsEl.createDiv({ cls: "doocs-md-width-value" });
-		widthValueEl.setText(`${Math.round(this.widthScale * 100)}%`);
-		
-		// 创建减小宽度按钮
-		const decreaseBtn = this.widthControlsEl.createEl("button", {
-			cls: "doocs-md-width-btn",
-			text: "-"
-		});
-		
-		// 创建增加宽度按钮
-		const increaseBtn = this.widthControlsEl.createEl("button", {
-			cls: "doocs-md-width-btn",
-			text: "+"
-		});
-		
-		// 减小宽度事件
-		decreaseBtn.addEventListener("click", () => {
-			// 限制最小缩放为0.5 (50%)
-			this.widthScale = Math.max(0.5, this.widthScale - 0.1);
-			this.updateWidthScale();
-		});
-		
-		// 增加宽度事件
-		increaseBtn.addEventListener("click", () => {
-			// 限制最大缩放为2.0 (200%)
-			this.widthScale = Math.min(2.0, this.widthScale + 0.1);
-			this.updateWidthScale();
-		});
-		
-		// 重置宽度按钮
-		const resetBtn = this.widthControlsEl.createEl("button", {
-			cls: "doocs-md-width-reset-btn",
-			text: "重置"
-		});
-		
-		resetBtn.addEventListener("click", () => {
-			this.widthScale = 1.0;
-			this.updateWidthScale();
-		});
-	}
-	
-	// 更新宽度缩放
-	updateWidthScale() {
-		// 更新宽度显示
-		const widthValueEl = this.widthControlsEl.querySelector(".doocs-md-width-value");
-		if (widthValueEl) {
-			widthValueEl.setText(`${Math.round(this.widthScale * 100)}%`);
-		}
-		
-		// 保存设置
-		this.plugin.settings.widthScale = this.widthScale;
-		this.plugin.saveSettings();
-		
-		// 应用新尺寸
-		this.applyPreviewSize();
 	}
 	
 	// 应用预览尺寸
@@ -343,12 +268,9 @@ export class DoocsMdPreviewView extends ItemView {
 		
 		const { aspectRatio, baseWidth } = this.plugin.settings;
 		
-		// 调整后的宽度
-		const scaledWidth = baseWidth * this.widthScale;
-		
 		if (aspectRatio === 'auto') {
 			// 自适应模式
-			this.previewEl.style.width = `${scaledWidth}px`;
+			this.previewEl.style.width = `${baseWidth}px`;
 			this.previewEl.style.height = 'auto';
 			this.previewEl.style.maxHeight = "none";
 			this.previewEl.style.overflow = "visible";
@@ -356,9 +278,9 @@ export class DoocsMdPreviewView extends ItemView {
 			// 计算宽高比
 			const [widthRatio, heightRatio] = aspectRatio.split(':').map(Number);
 			// 根据比例计算高度
-			const height = (scaledWidth * heightRatio) / widthRatio;
+			const height = (baseWidth * heightRatio) / widthRatio;
 			
-			this.previewEl.style.width = `${scaledWidth}px`;
+			this.previewEl.style.width = `${baseWidth}px`;
 			this.previewEl.style.height = `${height}px`;
 			this.previewEl.style.overflow = "auto";
 		}

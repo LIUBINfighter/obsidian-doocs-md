@@ -7,10 +7,9 @@ interface DoocsMdSettings {
 	previewWidth: string;
 	previewHeight: string;
 	
-	// 新增长宽比相关设置
+	// 预览比例相关设置
 	aspectRatio: string;
 	baseWidth: number;
-	widthScale: number;
 }
 
 const DEFAULT_SETTINGS: DoocsMdSettings = {
@@ -19,9 +18,8 @@ const DEFAULT_SETTINGS: DoocsMdSettings = {
 	previewHeight: 'auto',
 	
 	// 默认长宽比设置
-	aspectRatio: '16:9',
-	baseWidth: 375,
-	widthScale: 1.0
+	aspectRatio: '9:16',
+	baseWidth: 375
 }
 
 export default class DoocsMd extends Plugin {

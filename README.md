@@ -1,6 +1,10 @@
 # Feature
 
-支持原生
+支持原生obsidian markdown语法
+
+- [ ] Callout
+- [ ] 表格
+- [ ] 脚注
 
 ## 微信公众号格式支持
 

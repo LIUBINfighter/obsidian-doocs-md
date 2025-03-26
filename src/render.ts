@@ -32,13 +32,10 @@ export class MarkdownRender {
     ): Promise<void> {
         try {
             if (format === RenderFormat.WECHAT) {
-                // 使用微信公众号格式解析器
+                // 微信格式预览已不再使用，保留代码仅供参考
                 WechatParser.renderToContainer(content, container);
-                
-                // 添加复制按钮
-                this.addCopyButton(container, content);
             } else {
-                // 使用Obsidian的Markdown渲染器
+                // 使用Obsidian的Markdown渲染器渲染普通HTML
                 await MarkdownRenderer.renderMarkdown(
                     content,
                     container,

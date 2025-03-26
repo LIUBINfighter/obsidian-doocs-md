@@ -4,6 +4,7 @@ import { MarkdownRender, RenderFormat } from "./render";
 import { ThemeManager } from "./utils/themeManager";
 import { SizeManager } from "./utils/sizeManager";
 import { ClipboardManager } from "./utils/clipboardManager";
+import { WechatParser } from "./parsers/wechatParser";
 
 // 定义视图类型
 export const VIEW_TYPE_DOOCS_PREVIEW = 'doocs-md-preview';
@@ -184,13 +185,13 @@ export class DoocsMdPreviewView extends ItemView {
 		// 创建渲染容器
 		const renderContainer = this.previewEl.createDiv({ cls: "doocs-md-render" });
 		
-		// 使用渲染器渲染内容
+		// 使用渲染器渲染内容 - 默认使用普通HTML格式
 		await MarkdownRender.renderMarkdownToElement(
 			content, 
 			renderContainer, 
 			filePath, 
 			this,
-			this.currentFormat
+			RenderFormat.DEFAULT
 		);
 		
 		// 确保主题被应用
@@ -247,60 +248,6 @@ export class DoocsMdPreviewView extends ItemView {
 			}
 		});
 		
-		// 创建格式选择下拉框
-		const formatSelectEl = this.toolbarEl.createEl("select", { cls: "doocs-md-format-select" });
-		
-		// 添加格式选项
-		const formatOptions = [
-			{ value: RenderFormat.DEFAULT, label: "默认格式" },
-			{ value: RenderFormat.WECHAT, label: "微信公众号" }
-		];
-		
-		formatOptions.forEach(option => {
-			const optionEl = formatSelectEl.createEl("option", {
-				text: option.label,
-				value: option.value
-			});
-			
-			if (this.currentFormat === option.value) {
-				optionEl.selected = true;
-			}
-		});
-		
-		// 格式选择事件
-		formatSelectEl.addEventListener("change", (e) => {
-			const target = e.target as HTMLSelectElement;
-			this.currentFormat = target.value as RenderFormat;
-			
-			// 更新预览
-			this.updatePreviewFromActiveFile();
-			
-			// 如果选择了微信格式，添加额外样式
-			if (this.currentFormat === RenderFormat.WECHAT) {
-				this.previewEl.addClass("wechat-preview-mode");
-				// 移除之前的主题样式
-				ThemeManager.applyTheme(this.previewEl, "light");
-				// 禁用主题按钮
-				const themeBtn = this.toolbarEl.querySelector(".doocs-md-theme-btn") as HTMLElement;
-				if (themeBtn) {
-					themeBtn.style.opacity = "0.5";
-					themeBtn.style.pointerEvents = "none";
-				}
-				new Notice(`已切换为微信公众号格式预览，固定为浅色主题`);
-			} else {
-				this.previewEl.removeClass("wechat-preview-mode");
-				// 恢复主题按钮
-				const themeBtn = this.toolbarEl.querySelector(".doocs-md-theme-btn") as HTMLElement;
-				if (themeBtn) {
-					themeBtn.style.opacity = "1";
-					themeBtn.style.pointerEvents = "auto";
-				}
-				// 恢复当前主题
-				ThemeManager.applyTheme(this.previewEl, this.plugin.settings.previewTheme);
-				new Notice(`已切换为默认格式预览`);
-			}
-		});
-		
 		// 添加主题切换按钮
 		const themeBtn = this.toolbarEl.createEl("button", { 
 			cls: "doocs-md-theme-btn",
@@ -318,22 +265,43 @@ export class DoocsMdPreviewView extends ItemView {
 			ThemeManager.setThemeButtonIcon(themeBtn, newTheme);
 		});
 		
-		// 添加复制HTML按钮
-		const copyBtn = this.toolbarEl.createEl("button", { 
+		// 添加复制为HTML格式按钮
+		const copyHtmlBtn = this.toolbarEl.createEl("button", { 
 			cls: "doocs-md-copy-btn",
-			attr: { title: "复制HTML到剪贴板" }
+			attr: { title: "复制为HTML格式" }
 		});
-		setIcon(copyBtn, "clipboard-copy");
+		setIcon(copyHtmlBtn, "clipboard-copy");
 		
 		// 复制HTML事件
-		copyBtn.addEventListener("click", () => {
+		copyHtmlBtn.addEventListener("click", () => {
 			const renderContainer = this.previewEl.querySelector('.doocs-md-render');
-			ClipboardManager.copyHtmlFromElement(renderContainer);
+			const success = ClipboardManager.copyHtmlFromElement(renderContainer);
+			if (success) {
+				new Notice("已复制为HTML格式");
+			}
 		});
 		
-		// 添加聚焦状态指示器
-		// const focusIndicator = this.toolbarEl.createDiv({ cls: "doocs-md-focus-indicator" });
-		// focusIndicator.setText("预览聚焦时将暂停自动更新");
+		// 添加复制为微信公众号格式按钮
+		const copyWechatBtn = this.toolbarEl.createEl("button", { 
+			cls: "doocs-md-copy-wechat-btn",
+			attr: { title: "复制为微信公众号格式" }
+		});
+		setIcon(copyWechatBtn, "file-code"); // 使用不同图标区分
+		
+		// 复制微信公众号格式事件
+		copyWechatBtn.addEventListener("click", async () => {
+			if (!this.lastContent) {
+				new Notice("没有内容可复制");
+				return;
+			}
+			
+			const success = await WechatParser.copyAsWechatFormat(this.lastContent);
+			if (success) {
+				new Notice("已复制为微信公众号格式，可直接粘贴到公众号编辑器");
+			} else {
+				new Notice("复制微信格式失败");
+			}
+		});
 		
 		// 刷新按钮
 		const refreshBtn = this.toolbarEl.createEl("button", { 
@@ -347,10 +315,10 @@ export class DoocsMdPreviewView extends ItemView {
 			new Notice("预览已刷新");
 		});
 		
-		// 添加新按钮：复制为Markdown
+		// 添加复制Markdown按钮
 		const copyMdBtn = this.toolbarEl.createEl("button", { 
-			cls: "doocs-md-copy-btn",
-			attr: { title: "复制美化后的Markdown" }
+			cls: "doocs-md-copy-md-btn",
+			attr: { title: "复制原始Markdown" }
 		});
 		setIcon(copyMdBtn, "file-text");
 		

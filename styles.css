@@ -118,7 +118,11 @@
 }
 
 /* ===== 复制按钮样式 ===== */
-.doocs-md-copy-btn {
+.doocs-md-copy-btn,
+.doocs-md-copy-wechat-btn,
+.doocs-md-copy-md-btn,
+.doocs-md-refresh-btn,
+.doocs-md-theme-btn {
   background-color: transparent;
   border: none;
   cursor: pointer;
@@ -131,14 +135,35 @@
   margin-left: 8px;
 }
 
-.doocs-md-copy-btn:hover {
+.doocs-md-copy-btn:hover,
+.doocs-md-copy-wechat-btn:hover,
+.doocs-md-copy-md-btn:hover,
+.doocs-md-refresh-btn:hover,
+.doocs-md-theme-btn:hover {
   background-color: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
-.doocs-md-copy-btn:active {
+.doocs-md-copy-btn:active,
+.doocs-md-copy-wechat-btn:active,
+.doocs-md-copy-md-btn:active,
+.doocs-md-refresh-btn:active,
+.doocs-md-theme-btn:active {
   background-color: var(--interactive-accent);
   color: var(--text-on-accent);
+}
+
+/* 微信复制按钮特殊样式 */
+.doocs-md-copy-wechat-btn {
+  color: #07C160;
+}
+
+.doocs-md-copy-wechat-btn:hover {
+  background-color: rgba(7, 193, 96, 0.1);
+}
+
+.doocs-md-copy-wechat-btn:active {
+  background-color: rgba(7, 193, 96, 0.2);
 }
 
 /* ===== 宽度控制 ===== */
@@ -281,15 +306,7 @@
 
 /* ===== 微信公众号格式预览 ===== */
 .wechat-preview-mode {
-  background-color: white !important;
-  color: #3f3f3f !important;
-  padding: 20px !important;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif !important;
-}
-
-.wechat-preview-mode .doocs-md-render {
-  /* 确保微信预览区域使用正确字体 */
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif !important;
+  display: none;
 }
 
 /* 美化微信预览区域滚动条 */
@@ -313,7 +330,7 @@
   background-color: #f8f8f8 !important;
   border-radius: 4px !important;
   padding: 10px !important;
-  margin: 15px 0 !important;
+  margin: 15px 0 !重要;
   overflow: auto !important;
   font-family: Menlo, Monaco, Consolas, Courier New, monospace !important;
   font-size: 14px !important;
@@ -371,6 +388,19 @@
   border-radius: 0 4px 4px 0 !important;
 }
 
+/* 为微信公众号格式复制按钮添加特殊样式 */
+.wechat-preview-mode ~ .doocs-md-toolbar .doocs-md-copy-btn {
+  color: #07C160 !important;
+}
+
+.wechat-preview-mode ~ .doocs-md-toolbar .doocs-md-copy-btn:hover {
+  background-color: rgba(7, 193, 96, 0.1) !important;
+}
+
+.wechat-preview-mode ~ .doocs-md-toolbar .doocs-md-copy-btn:active {
+  background-color: rgba(7, 193, 96, 0.2) !important;
+}
+
 /* ===== 状态指示器 ===== */
 .doocs-md-no-file {
   display: flex;
@@ -424,24 +454,5 @@
 
 /* 格式选择器样式 */
 .doocs-md-format-select {
-  background-color: var(--background-modifier-form-field);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--doocs-border-radius);
-  padding: 4px 8px;
-  font-size: 13px;
-  color: var(--text-normal);
-  cursor: pointer;
-  margin-left: 12px;
-  min-width: 120px;
-  transition: var(--doocs-transition);
-}
-
-.doocs-md-format-select:hover, .doocs-md-format-select:focus {
-  border-color: var(--interactive-accent);
-  outline: none;
-}
-
-.doocs-md-format-select option {
-  background-color: var(--background-primary);
-  color: var(--text-normal);
+  display: none;
 }

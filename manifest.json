@@ -1,11 +1,13 @@
 {
-	"id": "dooc-md",
-	"name": "dooc-md",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+  "id": "obsidian-doocs-md",
+  "name": "Doocs MD Preview",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Doocs风格的Markdown预览插件",
+  "author": "Your Name",
+  "authorUrl": "https://github.com/yourusername",
+  "isDesktopOnly": false,
+  "fundingUrl": {
+    "GitHub Sponsor": "https://github.com/sponsors/yourusername"
+  }
 }

@@ -6,3 +6,89 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+/* 工具栏样式 */
+.doocs-md-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    background-color: var(--background-secondary);
+    flex-wrap: wrap;
+}
+
+.doocs-md-toolbar-title {
+    font-weight: 500;
+    margin-right: 8px;
+}
+
+.doocs-md-toolbar-sizes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+}
+
+.doocs-md-size-btn {
+    background-color: var(--background-modifier-form-field);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.doocs-md-size-btn:hover {
+    background-color: var(--interactive-hover);
+}
+
+.doocs-md-size-btn.active {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.doocs-md-refresh-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.doocs-md-refresh-btn:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+/* 预览容器样式 */
+.doocs-md-preview-container {
+    margin: 0 auto;
+    padding: 20px;
+    overflow: auto;
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 预览渲染区域样式 */
+.doocs-md-render {
+    font-family: var(--font-text);
+    line-height: 1.6;
+}
+
+/* 无文件打开时的提示 */
+.doocs-md-no-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    color: var(--text-muted);
+    font-size: 16px;
+    font-style: italic;
+}

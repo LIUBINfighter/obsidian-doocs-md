@@ -3,7 +3,8 @@ import { WechatParser } from "../parsers/wechatParser";
 import { 
   solveWeChatImage, 
   modifyHtmlStructure, 
-  processClipboardContent 
+  processClipboardContent,
+  ensureString 
 } from "./markdownProcessor";
 
 /**
@@ -25,6 +26,12 @@ export class WechatExporter {
     const { includeTOC = false, addWatermark = true, primaryColor = "#07C160" } = options;
     
     try {
+      // 确保content是字符串
+      if (typeof content !== 'string') {
+        console.warn("WechatExporter.exportToHtml接收到非字符串输入:", content);
+        content = String(content || '');
+      }
+      
       // 生成微信公众号格式HTML
       let html = WechatParser.parse(content, { 
         includeTOC, 
@@ -40,7 +47,9 @@ export class WechatExporter {
       return html;
     } catch (error) {
       console.error("导出微信公众号格式失败:", error);
-      throw new Error(`导出失败: ${error instanceof Error ? error.message : String(error)}`);
+      return `<div style="color: red; padding: 20px; border: 1px solid #ffcccc;">
+        导出失败: ${error instanceof Error ? error.message : String(error)}
+      </div>`;
     }
   }
   
@@ -51,17 +60,29 @@ export class WechatExporter {
    */
   static async copyToClipboard(content: string): Promise<boolean> {
     try {
+      // 使用ensureString确保内容是字符串
+      content = ensureString(content);
+      
       const html = this.exportToHtml(content, {
         addWatermark: true,
         primaryColor: "#07C160"
       });
+      
+      // 检查html是否为空
+      if (!html) {
+        console.error("生成的HTML为空");
+        new Notice("导出失败: 生成的HTML为空");
+        return false;
+      }
       
       await navigator.clipboard.writeText(html);
       new Notice("已复制为微信公众号格式，可直接粘贴到公众号编辑器");
       return true;
     } catch (error) {
       console.error("复制微信公众号格式失败:", error);
-      new Notice(`复制失败: ${error instanceof Error ? error.message : String(error)}`);
+      // 提供更友好的错误消息
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      new Notice(`复制失败: ${errorMsg.substring(0, 100)}`);
       return false;
     }
   }

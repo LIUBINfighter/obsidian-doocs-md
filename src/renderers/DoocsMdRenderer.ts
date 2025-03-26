@@ -254,7 +254,19 @@ export function initRenderer(opts: IOpts) {
 
     // 段落元素渲染
     paragraph({ tokens }: Tokens.Paragraph): string {
-      const text = this.parser.parseInline(tokens);
+      let text;
+      try {
+        text = this.parser.parseInline(tokens);
+        // 确保text是字符串
+        if (typeof text !== 'string') {
+          console.warn("DoocsMdRenderer.paragraph接收到非字符串文本:", text);
+          text = String(text || '');
+        }
+      } catch (error) {
+        console.error("解析段落内容时出错:", error);
+        text = String(tokens);
+      }
+      
       const isFigureImage = text.includes(`<figure`) && text.includes(`<img`);
       const isEmpty = text.trim() === ``;
       if (isFigureImage || isEmpty) {
@@ -270,8 +282,14 @@ export function initRenderer(opts: IOpts) {
       return styledContent(`blockquote`, text);
     },
 
-    // 代码块元素渲染
+    // 代码块元素渲染 - 增加类型检查
     code({ text, lang = `` }: Tokens.Code): string {
+      // 确保text是字符串
+      if (typeof text !== 'string') {
+        console.warn("DoocsMdRenderer.code接收到非字符串代码:", text);
+        text = String(text || '');
+      }
+      
       if (lang.startsWith(`mermaid`)) {
         clearTimeout(codeIndex);
         codeIndex = setTimeout(() => {
@@ -293,25 +311,7 @@ export function initRenderer(opts: IOpts) {
       return `<pre class="hljs code__pre" ${styles(`code_pre`)}>${span}${code}</pre>`;
     },
 
-    // 行内代码元素渲染
-    codespan({ text }: Tokens.Codespan): string {
-      const escapedText = escapeHtml(text);
-      return styledContent(`codespan`, escapedText, `code`);
-    },
-
-    // 列表项元素渲染
-    listitem(item: Tokens.ListItem): string {
-      const prefix = isOrdered ? `${listIndex + 1}. ` : `• `;
-      const content = item.tokens.map(t => (this[t.type as keyof Renderer] as <T>(token: T) => string)(t)).join(``);
-      return styledContent(`listitem`, `${prefix}${content}`, `li`);
-    },
-
-    // 列表容器元素渲染
-    list({ ordered, items, start = 1 }: Tokens.List): string {
-      const listItems = [];
-      for (let i = 0; i < items.length; i++) {
-        isOrdered = ordered;
-        listIndex = Number(start) + i - 1;
+    // 行内代码元素渲染 - 增加类型检查
         const item = items[i];
         listItems.push(this.listitem(item));
       }

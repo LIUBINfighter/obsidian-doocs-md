@@ -39,8 +39,15 @@ export class WechatParser {
     
     /**
      * 转义HTML特殊字符
+     * 增加类型检查以处理非字符串输入
      */
-    private static escapeHtml(text: string): string {
+    private static escapeHtml(text: any): string {
+        // 增加类型检查，确保text是字符串
+        if (typeof text !== 'string') {
+            console.warn("WechatParser.escapeHtml接收到非字符串输入:", text);
+            return String(text || ''); // 转换为字符串或使用空字符串
+        }
+        
         return text
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
@@ -51,8 +58,15 @@ export class WechatParser {
     
     /**
      * 处理代码高亮
+     * 增加更健壮的错误处理
      */
-    private static highlightCode(code: string, language: string): string {
+    private static highlightCode(code: any, language: string): string {
+        // 确保code是字符串
+        if (typeof code !== 'string') {
+            console.warn("WechatParser.highlightCode接收到非字符串代码:", code);
+            code = String(code || '');
+        }
+        
         try {
             // 如果是受支持的语言则高亮，否则使用普通格式
             const lang = hljs.getLanguage(language) ? language : 'plaintext';
@@ -85,8 +99,14 @@ export class WechatParser {
             ">${text}</h${level}>`;
         };
         
-        // 段落渲染
+        // 段落渲染 - 增加类型检查
         renderer.paragraph = (text) => {
+            // 增加类型检查，确保text是字符串
+            if (typeof text !== 'string') {
+                console.warn("Renderer.paragraph接收到非字符串文本:", text);
+                text = String(text || '');
+            }
+            
             // 如果包含图片，不要包装p标签(微信编辑器要求)
             if (text.includes('<img ')) {
                 return text;
@@ -150,25 +170,58 @@ export class WechatParser {
             return `<div style="text-align: center; margin: 20px auto;">${imgHtml}</div>`;
         };
         
-        // 代码块渲染
+        // 代码块渲染 - 增强类型处理
         renderer.code = (code, language = '', isEscaped) => {
-            let lang = language || 'plaintext';
-            let processedCode = isEscaped ? code : this.escapeHtml(code);
-            
-            // 尝试高亮代码
-            if (lang !== 'plaintext') {
-                processedCode = this.highlightCode(code, lang);
+            // 检查输入是否为完整的代码块对象
+            if (typeof code === 'object' && code !== null) {
+                console.log("接收到代码块对象而非字符串:", code);
                 
-                // 替换高亮后的HTML转义字符
-                processedCode = processedCode
-                    .replace(/&lt;/g, '<span style="color:#9a6e3a;">&lt;</span>')
-                    .replace(/&gt;/g, '<span style="color:#9a6e3a;">&gt;</span>');
+                // 尝试从对象中提取文本内容
+                if (code.text) {
+                    console.log("使用代码块对象中的text属性");
+                    code = String(code.text);
+                } else if (code.raw) {
+                    console.log("使用代码块对象中的raw属性");
+                    const match = String(code.raw).match(/```.*?\n([\s\S]*?)```/);
+                    code = match ? match[1] : String(code.raw);
+                } else {
+                    code = String(code);
+                }
+                
+                // 如果对象有语言属性，优先使用
+                if (code.lang) {
+                    language = String(code.lang);
+                }
+            } else if (typeof code !== 'string') {
+                // 其他非字符串类型，直接转换为字符串
+                console.warn("Renderer.code接收到非字符串代码:", code);
+                code = String(code || '');
             }
             
-            // 处理空格和换行，确保代码格式正确
-            processedCode = processedCode
-                .replace(/\s/g, '&nbsp;')
-                .replace(/\n/g, '<br/>');
+            let lang = language || 'plaintext';
+            let processedCode;
+            
+            try {
+                processedCode = isEscaped ? code : this.escapeHtml(code);
+                
+                // 尝试高亮代码
+                if (lang !== 'plaintext') {
+                    processedCode = this.highlightCode(code, lang);
+                    
+                    // 替换高亮后的HTML转义字符
+                    processedCode = processedCode
+                        .replace(/&lt;/g, '<span style="color:#9a6e3a;">&lt;</span>')
+                        .replace(/&gt;/g, '<span style="color:#9a6e3a;">&gt;</span>');
+                }
+                
+                // 处理空格和换行，确保代码格式正确
+                processedCode = processedCode
+                    .replace(/\s/g, '&nbsp;')
+                    .replace(/\n/g, '<br/>');
+            } catch (error) {
+                console.error("处理代码块失败:", error);
+                processedCode = `处理代码时出错: ${String(error)}`;
+            }
             
             // 添加语言标识
             const langLabel = lang !== 'plaintext' ? 
@@ -184,36 +237,10 @@ export class WechatParser {
                 ">${lang}</div>` : '';
             
             // 微信代码块样式
-            return `<pre style="
-                position: relative;
-                background-color: ${config.colors.codeBackground};
-                border-radius: 4px;
-                padding: 10px;
-                margin: 15px 0;
-                overflow: auto;
-                font-family: Menlo, Monaco, Consolas, Courier New, monospace;
-                font-size: 14px;
-                line-height: 1.5;
-                color: ${config.colors.text};
-                word-break: break-all;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                border: 1px solid #f0f0f0;
-            ">${langLabel}<code>${processedCode}</code></pre>`;
-        };
-        
-        // 行内代码渲染
-        renderer.codespan = (code) => {
-            return `<code style="
-                background-color: ${config.colors.codeBackground};
-                border-radius: 3px;
-                padding: 2px 5px;
-                font-family: Menlo, Monaco, Consolas, Courier New, monospace;
-                font-size: 85%;
-                color: ${config.colors.code};
-                word-break: break-all;
-                word-wrap: break-word;
-            ">${code}</code>`;
+                // color: ${config.colors.code};
+                // word-break: break-all;
+                // word-wrap: break-word;
+            // ">${code}</code>`;
         };
         
         // 引用块渲染
@@ -387,51 +414,62 @@ export class WechatParser {
     
     /**
      * 解析Markdown为微信公众号格式的HTML
-     * @param markdown Markdown内容
-     * @param options 配置选项
-     * @returns 格式化的HTML
+     * 增加更健壮的错误处理
      */
     static parse(markdown: string, options: { 
         includeTOC?: boolean, 
         addWatermark?: boolean
     } = {}): string {
-        // 创建自定义渲染器
-        const renderer = this.createCustomRenderer();
+        // 确保markdown是字符串
+        if (typeof markdown !== 'string') {
+            console.warn("WechatParser.parse接收到非字符串输入:", markdown);
+            markdown = String(markdown || '');
+        }
         
-        // 配置marked选项
-        marked.setOptions({
-            renderer,
-            gfm: true,          // 启用GitHub风格Markdown
-            breaks: true,       // 启用回车换行
-            pedantic: false,    // 严格符合原始markdown.pl
-            smartLists: true,   // 优化列表
-            smartypants: false, // 优化标点符号
-            xhtml: false        // 关闭严格的XML模式
-        });
-        
-        // 解析Markdown并获取HTML
-        let html = marked.parse(markdown);
-        
-        // 如果需要，添加目录
-        if (options.includeTOC) {
-            const toc = this.generateTOC(markdown);
-            if (toc) {
-                html = toc + html;
+        try {
+            // 创建自定义渲染器
+            const renderer = this.createCustomRenderer();
+            
+            // 配置marked选项
+            marked.setOptions({
+                renderer,
+                gfm: true,          // 启用GitHub风格Markdown
+                breaks: true,       // 启用回车换行
+                pedantic: false,    // 严格符合原始markdown.pl
+                smartLists: true,   // 优化列表
+                smartypants: false, // 优化标点符号
+                xhtml: false        // 关闭严格的XML模式
+            });
+            
+            // 解析Markdown并获取HTML
+            let html = marked.parse(markdown);
+            
+            // 如果需要，添加目录
+            if (options.includeTOC) {
+                const toc = this.generateTOC(markdown);
+                if (toc) {
+                    html = toc + html;
+                }
             }
+            
+            // 如果需要，添加水印
+            if (options.addWatermark) {
+                html += `<div style="
+                    text-align: center;
+                    margin-top: 40px;
+                    color: #888;
+                    font-size: 12px;
+                ">使用 Obsidian Doocs MD 插件生成</div>`;
+            }
+            
+            // 包装HTML并返回
+            return this.wrapWithContainer(html);
+        } catch (error) {
+            console.error("解析Markdown为微信格式失败:", error);
+            return `<div style="color: red; padding: 20px; border: 1px solid #ffcccc;">
+                解析Markdown为微信格式失败: ${String(error)}
+            </div>`;
         }
-        
-        // 如果需要，添加水印
-        if (options.addWatermark) {
-            html += `<div style="
-                text-align: center;
-                margin-top: 40px;
-                color: #888;
-                font-size: 12px;
-            ">使用 Obsidian Doocs MD 插件生成</div>`;
-        }
-        
-        // 包装HTML并返回
-        return this.wrapWithContainer(html);
     }
     
     /**
@@ -446,16 +484,31 @@ export class WechatParser {
     
     /**
      * 复制为微信格式 - 辅助方法
-     * @param content Markdown内容
-     * @returns Promise<boolean> 是否复制成功
+     * 增加更健壮的错误处理
      */
     static async copyAsWechatFormat(content: string): Promise<boolean> {
         try {
+            // 确保content是字符串
+            if (typeof content !== 'string') {
+                console.warn("WechatParser.copyAsWechatFormat接收到非字符串输入:", content);
+                content = String(content || '');
+            }
+            
             const html = this.parse(content);
+            
+            // 检查html是否为空
+            if (!html) {
+                console.error("生成的HTML为空");
+                return false;
+            }
+            
             await navigator.clipboard.writeText(html);
             return true;
         } catch (error) {
             console.error("复制微信格式失败:", error);
+            // 输出更多调试信息
+            console.debug("Content type:", typeof content);
+            console.debug("Content preview:", content?.substring?.(0, 100) || content);
             return false;
         }
     }

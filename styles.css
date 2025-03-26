@@ -412,19 +412,6 @@
   font-style: italic;
 }
 
-.doocs-md-toolbar::after {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-left: 8px;
-  display: none;
-}
-
-.doocs-md-view-focused .doocs-md-toolbar::after {
-  display: block;
-  background-color: var(--interactive-accent);
-}
 
 /* .doocs-md-focus-indicator {
   font-size: 12px;

@@ -1,5 +1,6 @@
 import { ItemView, WorkspaceLeaf, MarkdownView, MarkdownRenderer, setIcon, Notice, TFile } from "obsidian";
 import Md2Cards from "./main";
+import { getAllStyles, switchStyle, applyGlobalStyles } from './assets';
 
 // 定义视图类型
 export const VIEW_TYPE_DOOCS_PREVIEW = 'md-notes-preview';
@@ -47,7 +48,7 @@ export class Md2CardsPreviewView extends ItemView {
 		this.previewEl = containerEl.createDiv({ cls: "md-notes-preview-container" });
 		this.applyPreviewSize();
 		
-			// 创建分页控件
+		// 创建分页控件
 		this.paginationEl = containerEl.createDiv({ cls: "md-notes-pagination" });
 		
 		// 添加焦点事件监听
@@ -161,22 +162,33 @@ export class Md2CardsPreviewView extends ItemView {
 	
 	// 将Markdown内容分割为卡片
 	parseContentToCards(content: string) {
-		// 使用二级标题作为分隔符
-		this.cards = content.split(/^## /m).filter(Boolean);
+		// 分割内容
+		const segments = content.split(/^## /m);
 		
-		// 如果第一段不是以## 开头，需要特殊处理
-		if (!content.trim().startsWith('## ')) {
-			if (this.cards.length > 0) {
-				// 如果有卡片，将第一段内容添加## 前缀
-				this.cards[0] = '## ' + this.cards[0];
+		// 处理分割后的片段
+		this.cards = [];
+		
+		// 处理第一个片段 (可能没有## 前缀)
+		if (segments[0].trim() !== '') {
+			// 如果文档以## 开头，第一个片段会是空字符串
+			// 如果不是空字符串，说明第一个片段是正文开始，不以## 开头
+			this.cards.push(segments[0]);
+		}
+		
+		// 处理其余片段 (需要添加## 前缀)
+		for (let i = 1; i < segments.length; i++) {
+			if (segments[i].trim() !== '') {
+				this.cards.push('## ' + segments[i]);
 			}
-		} else {
-			// 如果内容以## 开头，为所有卡片添加## 前缀
-			this.cards = this.cards.map(card => '## ' + card);
 		}
 		
 		// 重置当前卡片索引
 		this.currentCardIndex = 0;
+		
+		// 如果没有卡片，尝试将整个内容作为一个卡片
+		if (this.cards.length === 0 && content.trim() !== '') {
+			this.cards.push(content);
+		}
 	}
 	
 	// 显示无文件消息
@@ -275,8 +287,48 @@ export class Md2CardsPreviewView extends ItemView {
 	createToolbar() {
 		this.toolbarEl.empty();
 		
-		// 工具栏左侧 - 长宽比选择器
+		// 工具栏左侧 - 样式选择器
 		const leftSection = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-section" });
+		
+		// 样式选择标签
+		const styleLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
+		styleLabel.setText("样式：");
+		
+		// 创建样式选择下拉框
+		const styleSelect = leftSection.createEl("select", { cls: "md-notes-style-select" });
+		
+		// 添加所有可用样式
+		const styles = getAllStyles();
+		styles.forEach(style => {
+			const optionEl = styleSelect.createEl("option", { 
+				value: style.id,
+				text: style.name
+			});
+			
+			if (this.plugin.settings.styleId === style.id) {
+				optionEl.selected = true;
+			}
+		});
+		
+		// 监听选择变化
+		styleSelect.addEventListener("change", () => {
+			this.plugin.settings.styleId = styleSelect.value;
+			
+			// 切换样式
+			if (switchStyle(styleSelect.value)) {
+				// 应用全局样式
+				applyGlobalStyles(document.body);
+				
+				// 刷新预览
+				this.renderCurrentCard(this.lastActiveMarkdownFile?.path || "");
+			}
+			
+			this.plugin.saveSettings();
+			new Notice(`样式已切换为 ${styleSelect.options[styleSelect.selectedIndex].text}`);
+		});
+		
+		// 添加分隔符
+		const separator = leftSection.createDiv({ cls: "md-notes-toolbar-separator" });
 		
 		// 比例选择标签
 		const ratioLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });

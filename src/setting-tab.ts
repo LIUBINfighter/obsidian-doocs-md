@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import Md2Cards from './main';
+import { getAllStyles, switchStyle, applyGlobalStyles } from './assets';
 
 export class Md2CardsSettingTab extends PluginSettingTab {
 	plugin: Md2Cards;
@@ -15,6 +16,36 @@ export class Md2CardsSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl('h2', { text: 'md2cards 设置' });
+		
+		// 样式选择设置
+		new Setting(containerEl)
+			.setName('卡片样式')
+			.setDesc('选择预设的卡片样式模板')
+			.addDropdown(dropdown => {
+				// 添加所有可用样式
+				const styles = getAllStyles();
+				styles.forEach(style => {
+					dropdown.addOption(style.id, style.name);
+				});
+				
+				dropdown.setValue(this.plugin.settings.styleId)
+					.onChange(async (value) => {
+						this.plugin.settings.styleId = value;
+						
+						// 切换样式
+						if (switchStyle(value)) {
+							// 应用全局样式
+							applyGlobalStyles(document.body);
+							
+							// 如果视图存在，刷新视图
+							if (this.plugin.view) {
+								this.plugin.view.updatePreviewFromActiveFile();
+							}
+						}
+						
+						await this.plugin.saveSettings();
+					});
+			});
 
 		// 长宽比设置
 		new Setting(containerEl)

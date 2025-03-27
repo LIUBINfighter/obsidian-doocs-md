@@ -565,6 +565,8 @@ export class Md2CardsPreviewView extends ItemView {
 				themeName: this.plugin.settings.themeName,
 				// 添加主题样式
 				extraStyles: themeCSS || '',
+				// 添加自定义CSS
+				customCSS: this.plugin.customCSS,
 				// 添加分割选项
 				split: {
 					mode: this.plugin.settings.exportSettings.splitMode || 'fixed',

@@ -65,14 +65,6 @@
   margin-right: 8px;
 }
 
-/* 工具栏分隔符 */
-.md-notes-toolbar-separator {
-  width: 1px;
-  height: 20px;
-  background-color: var(--background-modifier-border);
-  margin: 0 8px;
-}
-
 /* 宽度控制 */
 .md-notes-width-controls {
   display: flex;
@@ -187,8 +179,9 @@
 
 /* 渲染容器样式 */
 .md-notes-render {
-  height: 100%;
-  overflow: auto;
+  /* 移除 height: 100% 和 overflow: auto 样式 */
+  /* height: 100%; */
+  /* overflow: auto; */
 }
 
 /* 聚焦样式 */

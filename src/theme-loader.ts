@@ -60,8 +60,8 @@ export class ThemeLoader {
             // 添加默认主题
             this.addDefaultThemes();
             
-            // 获取主题文件夹路径
-            const themesPath = path.join(this.app.vault.adapter.basePath, '.obsidian', 'themes');
+            // 获取主题文件夹路径 - 修复路径
+            const themesPath = path.join(this.app.vault.adapter.basePath, '.obsidian/themes');
             
             // 检查themes文件夹是否存在
             const exists = await this.app.vault.adapter.exists(themesPath);

@@ -4,6 +4,7 @@ import { activateView } from './activateView';
 import { Md2CardsSettingTab } from './setting-tab';
 import { registerStyle, DefaultStyle, applyGlobalStyles, switchStyle } from './assets';
 import ExampleStyle from './assets/example';
+import { ThemeLoader } from './theme-loader';
 
 export interface Md2CardsSettings {
 	aspectRatio: string; // 长宽比选项: "1:1", "3:4", "4:3"
@@ -11,6 +12,15 @@ export interface Md2CardsSettings {
 	widthScale: number; // 宽度缩放比例
 	exportFolder: string; // 导出图片文件夹
 	styleId: string; // 当前使用的样式ID
+	themeName: string; // 当前使用的主题名称
+	exportSettings: { // 导出设置
+		socialCard: boolean; // 是否导出为社交媒体卡片风格
+		authorName: string; // 作者名称
+		authorAvatar: string; // 作者头像URL
+		watermarkText: string; // 水印文本
+		borderRadius: number; // 圆角大小
+		addBorder: boolean; // 是否添加边框
+	};
 }
 
 const DEFAULT_SETTINGS: Md2CardsSettings = {
@@ -18,15 +28,29 @@ const DEFAULT_SETTINGS: Md2CardsSettings = {
 	baseWidth: 768,
 	widthScale: 1.0,
 	exportFolder: 'exports',
-	styleId: 'default' // 默认样式
+	styleId: 'default', // 默认样式
+	themeName: 'default', // 默认主题
+	exportSettings: {
+		socialCard: true,
+		authorName: '',
+		authorAvatar: '',
+		watermarkText: 'Made with Obsidian',
+		borderRadius: 12,
+		addBorder: true
+	}
 }
 
 export default class Md2Cards extends Plugin {
 	settings: Md2CardsSettings;
 	view: Md2CardsPreviewView;
+	themeLoader: ThemeLoader;
 
 	async onload() {
 		await this.loadSettings();
+		
+		// 初始化主题加载器
+		this.themeLoader = new ThemeLoader(this.app);
+		await this.themeLoader.loadThemes();
 		
 		// 初始化样式系统
 		this.initializeStyles();

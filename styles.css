@@ -2,13 +2,12 @@
 
 /* 主容器样式 */
 .md-notes-preview-container {
-  background-color: var(--background-primary);
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  padding: 20px;
-  margin: 10px auto;
-  border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	padding: 20px;
+	margin: 10px auto;
+	border: 1px solid var(--background-modifier-border);
 }
 
 /* 工具栏样式 */
@@ -51,6 +50,18 @@
   color: var(--text-normal);
   padding: 4px 8px;
   font-size: 14px;
+  margin-right: 8px;
+}
+
+/* 主题选择器 */
+.md-notes-theme-select {
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+  padding: 4px 8px;
+  font-size: 14px;
+  min-width: 120px;
   margin-right: 8px;
 }
 

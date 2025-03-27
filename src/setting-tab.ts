@@ -46,6 +46,33 @@ export class Md2CardsSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
+		
+		// 主题选择设置
+		new Setting(containerEl)
+			.setName('导出主题')
+			.setDesc('选择导出图片时使用的Obsidian主题')
+			.addDropdown(dropdown => {
+				// 添加所有可用主题
+				const themes = this.plugin.themeLoader.getThemes();
+				themes.forEach(theme => {
+					dropdown.addOption(theme.name, theme.name);
+				});
+				
+				dropdown.setValue(this.plugin.settings.themeName)
+					.onChange(async (value) => {
+						this.plugin.settings.themeName = value;
+						await this.plugin.saveSettings();
+					});
+			})
+			.addExtraButton(button => 
+				button
+					.setIcon('refresh')
+					.setTooltip('刷新主题列表')
+					.onClick(async () => {
+						await this.plugin.themeLoader.loadThemes();
+						this.display();
+					})
+			);
 
 		// 长宽比设置
 		new Setting(containerEl)
@@ -95,17 +122,89 @@ export class Md2CardsSettingTab extends PluginSettingTab {
 						this.display();
 					})
 			);
-
-		// 导出文件夹设置
+			
+		// 导出设置标题
+		containerEl.createEl('h3', { text: '导出设置' });
+		
+		// 社交卡片设置
 		new Setting(containerEl)
-			.setName('导出文件夹')
-			.setDesc('指定导出卡片图片的目标文件夹')
+			.setName('社交卡片样式')
+			.setDesc('导出图片时使用社交媒体卡片样式，包含作者信息和水印')
+			.addToggle(toggle => 
+				toggle
+					.setValue(this.plugin.settings.exportSettings.socialCard)
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.socialCard = value;
+						await this.plugin.saveSettings();
+					})
+			);
+		
+		// 作者名称设置
+		new Setting(containerEl)
+			.setName('作者名称')
+			.setDesc('导出图片时显示的作者名称')
 			.addText(text => 
 				text
-					.setPlaceholder('exports')
-					.setValue(this.plugin.settings.exportFolder)
+					.setPlaceholder('请输入作者名称')
+					.setValue(this.plugin.settings.exportSettings.authorName)
 					.onChange(async (value) => {
-						this.plugin.settings.exportFolder = value;
+						this.plugin.settings.exportSettings.authorName = value;
+						await this.plugin.saveSettings();
+					})
+			);
+		
+		// 作者头像URL
+		new Setting(containerEl)
+			.setName('作者头像URL')
+			.setDesc('导出图片时显示的作者头像URL')
+			.addText(text => 
+				text
+					.setPlaceholder('请输入头像图片URL')
+					.setValue(this.plugin.settings.exportSettings.authorAvatar)
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.authorAvatar = value;
+						await this.plugin.saveSettings();
+					})
+			);
+		
+		// 水印文本
+		new Setting(containerEl)
+			.setName('水印文本')
+			.setDesc('导出图片时添加的水印文本')
+			.addText(text => 
+				text
+					.setPlaceholder('Made with Obsidian')
+					.setValue(this.plugin.settings.exportSettings.watermarkText)
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.watermarkText = value;
+						await this.plugin.saveSettings();
+					})
+			);
+		
+		// 圆角大小
+		new Setting(containerEl)
+			.setName('圆角大小')
+			.setDesc('导出图片的圆角大小 (0-20)')
+			.addSlider(slider => 
+				slider
+					.setLimits(0, 20, 1)
+					.setValue(this.plugin.settings.exportSettings.borderRadius)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.borderRadius = value;
+						await this.plugin.saveSettings();
+					})
+			);
+		
+		// 是否添加边框
+		new Setting(containerEl)
+			.setName('添加边框')
+			.setDesc('导出图片时是否添加边框')
+			.addToggle(toggle => 
+				toggle
+					.setValue(this.plugin.settings.exportSettings.addBorder)
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.addBorder = value;
 						await this.plugin.saveSettings();
 					})
 			);

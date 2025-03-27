@@ -1,6 +1,8 @@
 import { ItemView, WorkspaceLeaf, MarkdownView, MarkdownRenderer, setIcon, Notice, TFile } from "obsidian";
 import Md2Cards from "./main";
 import { getAllStyles, switchStyle, applyGlobalStyles } from './assets';
+import * as domtoimage from 'dom-to-image-more'; // 导入 dom-to-image-more
+import { exportCurrentCard, ExportFormat } from './export'; // 引入导出函数
 
 // 定义视图类型
 export const VIEW_TYPE_DOOCS_PREVIEW = 'md-notes-preview';
@@ -330,6 +332,36 @@ export class Md2CardsPreviewView extends ItemView {
 		// 添加分隔符
 		const separator = leftSection.createDiv({ cls: "md-notes-toolbar-separator" });
 		
+		// 添加主题选择器
+		const themeLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
+		themeLabel.setText("主题：");
+		
+		// 创建主题选择下拉框
+		const themeSelect = leftSection.createEl("select", { cls: "md-notes-theme-select" });
+		
+		// 添加所有可用主题
+		const themes = this.plugin.themeLoader.getThemes();
+		themes.forEach(theme => {
+			const optionEl = themeSelect.createEl("option", { 
+				value: theme.name,
+				text: theme.name
+			});
+			
+			if (this.plugin.settings.themeName === theme.name) {
+				optionEl.selected = true;
+			}
+		});
+		
+		// 监听选择变化
+		themeSelect.addEventListener("change", () => {
+			this.plugin.settings.themeName = themeSelect.value;
+			this.plugin.saveSettings();
+			new Notice(`主题已切换为 ${themeSelect.value}`);
+		});
+		
+		// 添加另一个分隔符
+		const separator2 = leftSection.createDiv({ cls: "md-notes-toolbar-separator" });
+		
 		// 比例选择标签
 		const ratioLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
 		ratioLabel.setText("预览比例：");
@@ -482,8 +514,52 @@ export class Md2CardsPreviewView extends ItemView {
 			return;
 		}
 		
-		new Notice("卡片导出功能正在开发中");
-		// 在此实现导出图片功能
-		// 这里需要使用HTML-to-Image或类似库来实现
+		// 获取预览容器
+		const node = this.previewEl.querySelector(".md-notes-render") as HTMLElement;
+		
+		if (!node) {
+			new Notice("找不到要导出的内容");
+			return;
+		}
+		
+		// 获取当前主题CSS
+		const themeCSS = await this.plugin.themeLoader.getThemeCSS(this.plugin.settings.themeName);
+		
+		// 使用解耦的导出功能导出当前卡片
+		await exportCurrentCard(
+			node,
+			this.lastActiveMarkdownFile,
+			this.currentCardIndex,
+			ExportFormat.PNG,
+			{
+				// 缩放比例，提高图片清晰度
+				scale: 2,
+				// 设置背景色，确保透明元素可见
+				backgroundColor: 'white',
+				// 添加边框和圆角
+				borderRadius: this.plugin.settings.exportSettings.borderRadius,
+				border: this.plugin.settings.exportSettings.addBorder,
+				// 添加社交卡片样式
+				socialCard: this.plugin.settings.exportSettings.socialCard,
+				// 添加作者信息
+				author: {
+					name: this.plugin.settings.exportSettings.authorName || '匿名用户',
+					avatar: this.plugin.settings.exportSettings.authorAvatar
+				},
+				// 添加水印
+				watermark: {
+					text: this.plugin.settings.exportSettings.watermarkText,
+					position: 'bottom-right'
+				},
+				// 添加主题信息
+				themeName: this.plugin.settings.themeName,
+				// 添加主题样式
+				extraStyles: themeCSS || '',
+				// 导出前处理函数
+				beforeExport: (node) => {
+					// 可以在这里临时调整导出前的DOM元素
+				}
+			}
+		);
 	}
 }

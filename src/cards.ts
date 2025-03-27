@@ -208,11 +208,11 @@ export class Md2CardsPreviewView extends ItemView {
 		// 清空旧内容
 		this.previewEl.empty();
 		
-		// 添加文件路径指示
-		if (this.lastActiveMarkdownFile) {
-			const pathIndicator = this.previewEl.createDiv({ cls: "md-notes-file-path" });
-			pathIndicator.setText(`预览: ${this.lastActiveMarkdownFile.basename}`);
-		}
+		// 添加文件路径指示径指示
+		// if (this.lastActiveMarkdownFile) {) {
+		// 	const pathIndicator = this.previewEl.createDiv({ cls: "md-notes-file-path" });});
+		// 	pathIndicator.setText(`预览: ${this.lastActiveMarkdownFile.basename}`);`);
+		// }/ }
 		
 		// 检查是否有卡片
 		if (this.cards.length === 0) {
@@ -223,6 +223,9 @@ export class Md2CardsPreviewView extends ItemView {
 		
 		// 创建渲染容器
 		const renderContainer = this.previewEl.createDiv({ cls: "md-notes-render" });
+		// 移除 height: 100% 和 overflow: auto 样式
+		// renderContainer.style.height = "100%";
+		// renderContainer.style.overflow = "auto";
 		
 		try {
 			// 获取当前卡片内容
@@ -293,8 +296,8 @@ export class Md2CardsPreviewView extends ItemView {
 		const leftSection = this.toolbarEl.createDiv({ cls: "md-notes-toolbar-section" });
 		
 		// 样式选择标签
-		const styleLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
-		styleLabel.setText("样式：");
+		// const styleLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
+		// styleLabel.setText("样式：");
 		
 		// 创建样式选择下拉框
 		const styleSelect = leftSection.createEl("select", { cls: "md-notes-style-select" });
@@ -333,8 +336,8 @@ export class Md2CardsPreviewView extends ItemView {
 		const separator = leftSection.createDiv({ cls: "md-notes-toolbar-separator" });
 		
 		// 添加主题选择器
-		const themeLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
-		themeLabel.setText("主题：");
+		// const themeLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
+		// themeLabel.setText("主题：");
 		
 		// 创建主题选择下拉框
 		const themeSelect = leftSection.createEl("select", { cls: "md-notes-theme-select" });
@@ -363,8 +366,8 @@ export class Md2CardsPreviewView extends ItemView {
 		const separator2 = leftSection.createDiv({ cls: "md-notes-toolbar-separator" });
 		
 		// 比例选择标签
-		const ratioLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
-		ratioLabel.setText("预览比例：");
+		// const ratioLabel = leftSection.createDiv({ cls: "md-notes-toolbar-label" });
+		// ratioLabel.setText("预览比例：");
 		
 		// 创建下拉选择框
 		const ratioSelect = leftSection.createEl("select", { cls: "md-notes-ratio-select" });
@@ -410,8 +413,8 @@ export class Md2CardsPreviewView extends ItemView {
 		const widthControls = rightSection.createDiv({ cls: "md-notes-width-controls" });
 		
 		// 宽度标签
-		const widthLabel = widthControls.createDiv({ cls: "md-notes-toolbar-label" });
-		widthLabel.setText("宽度：");
+		// const widthLabel = widthControls.createDiv({ cls: "md-notes-toolbar-label" });
+		// widthLabel.setText("宽度：");
 		
 		// 宽度值显示
 		const widthValueEl = widthControls.createDiv({ cls: "md-notes-width-value" });
@@ -522,6 +525,10 @@ export class Md2CardsPreviewView extends ItemView {
 			return;
 		}
 		
+		// 获取当前卡片容器的尺寸
+		const containerWidth = this.previewEl.clientWidth;
+		const containerHeight = this.previewEl.clientHeight;
+		
 		// 获取当前主题CSS
 		const themeCSS = await this.plugin.themeLoader.getThemeCSS(this.plugin.settings.themeName);
 		
@@ -536,6 +543,9 @@ export class Md2CardsPreviewView extends ItemView {
 				scale: 2,
 				// 设置背景色，确保透明元素可见
 				backgroundColor: 'white',
+				// 传递容器尺寸
+				width: containerWidth,
+				height: containerHeight,
 				// 添加边框和圆角
 				borderRadius: this.plugin.settings.exportSettings.borderRadius,
 				border: this.plugin.settings.exportSettings.addBorder,
@@ -555,9 +565,11 @@ export class Md2CardsPreviewView extends ItemView {
 				themeName: this.plugin.settings.themeName,
 				// 添加主题样式
 				extraStyles: themeCSS || '',
-				// 导出前处理函数
-				beforeExport: (node) => {
-					// 可以在这里临时调整导出前的DOM元素
+				// 添加分割选项
+				split: {
+					mode: this.plugin.settings.exportSettings.splitMode || 'fixed',
+					height: this.plugin.settings.exportSettings.splitHeight || 1200,
+					overlap: this.plugin.settings.exportSettings.splitOverlap || 50
 				}
 			}
 		);

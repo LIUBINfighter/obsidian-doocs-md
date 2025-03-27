@@ -20,6 +20,9 @@ export interface Md2CardsSettings {
 		watermarkText: string; // 水印文本
 		borderRadius: number; // 圆角大小
 		addBorder: boolean; // 是否添加边框
+		splitMode: string; // 分割模式: fixed, hr, auto
+		splitHeight: number; // 分割高度
+		splitOverlap: number; // 重叠区域高度
 	};
 }
 
@@ -36,7 +39,10 @@ const DEFAULT_SETTINGS: Md2CardsSettings = {
 		authorAvatar: '',
 		watermarkText: 'Made with Obsidian',
 		borderRadius: 12,
-		addBorder: true
+		addBorder: true,
+		splitMode: 'fixed',
+		splitHeight: 1200,
+		splitOverlap: 50
 	}
 }
 
@@ -44,6 +50,7 @@ export default class Md2Cards extends Plugin {
 	settings: Md2CardsSettings;
 	view: Md2CardsPreviewView;
 	themeLoader: ThemeLoader;
+	customCSS: string; // 添加自定义CSS属性
 
 	async onload() {
 		await this.loadSettings();
@@ -54,6 +61,9 @@ export default class Md2Cards extends Plugin {
 		
 		// 初始化样式系统
 		this.initializeStyles();
+		
+		 // 读取自定义CSS文件
+		await this.loadCustomCSS();
 		
 		// 注册预览视图
 		this.registerView(
@@ -100,6 +110,30 @@ export default class Md2Cards extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
+
+	/**
+	 * 加载自定义CSS
+	 */
+	async loadCustomCSS() {
+		try {
+			// 获取CSS文件路径
+			const cssPath = `${this.manifest.dir}/styles.css`;
+			
+			// 检查文件是否存在
+			const cssExists = await this.app.vault.adapter.exists(cssPath);
+			if (!cssExists) {
+				console.warn("CSS文件不存在:", cssPath);
+				this.customCSS = '';
+				return;
+			}
+			
+			// 读取CSS文件内容
+			this.customCSS = await this.app.vault.adapter.read(cssPath);
+		} catch (error) {
+			console.error("加载CSS失败:", error);
+			this.customCSS = '';
+		}
 	}
 
 	async saveSettings() {

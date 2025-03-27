@@ -177,13 +177,13 @@
   padding: 20px;
 }
 
-.md-notes-file-path {
+/* .md-notes-file-path {
   font-size: 12px;
   color: var(--text-muted);
   margin-bottom: 10px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--background-modifier-border);
-}
+} */
 
 /* 渲染容器样式 */
 .md-notes-render {

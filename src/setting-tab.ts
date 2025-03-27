@@ -208,5 +208,64 @@ export class Md2CardsSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		// 分割设置标题
+		containerEl.createEl('h3', { text: '分割导出设置' });
+		
+		// 分割模式设置
+		new Setting(containerEl)
+			.setName('分割模式')
+			.setDesc('选择长内容的分割方式')
+			.addDropdown(dropdown => 
+				dropdown
+					.addOption('fixed', '固定高度')
+					.addOption('hr', '按分隔线(hr)分割')
+					.addOption('auto', '按段落自动分割')
+					.setValue(this.plugin.settings.exportSettings.splitMode)
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.splitMode = value;
+						await this.plugin.saveSettings();
+					})
+			);
+		
+		// 分割高度设置
+		new Setting(containerEl)
+			.setName('分割高度')
+			.setDesc('固定高度模式下的分割高度(像素)')
+			.addSlider(slider => 
+				slider
+					.setLimits(800, 3000, 100)
+					.setValue(this.plugin.settings.exportSettings.splitHeight)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.splitHeight = value;
+						await this.plugin.saveSettings();
+					})
+			)
+			.addExtraButton(button => 
+				button
+					.setIcon('reset')
+					.setTooltip('重置为默认值')
+					.onClick(async () => {
+						this.plugin.settings.exportSettings.splitHeight = 1200;
+						await this.plugin.saveSettings();
+						this.display();
+					})
+			);
+		
+		// 重叠区域高度设置
+		new Setting(containerEl)
+			.setName('重叠区域高度')
+			.setDesc('分割时重叠区域的高度(像素)')
+			.addSlider(slider => 
+				slider
+					.setLimits(0, 200, 10)
+					.setValue(this.plugin.settings.exportSettings.splitOverlap)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.exportSettings.splitOverlap = value;
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }

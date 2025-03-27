@@ -21,14 +21,16 @@ const ExampleStyle: CardStyleTemplate = {
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            transition: all 0.3s ease;
+            /* 删除滑动效果，移除 transition */
             border: 1px solid var(--background-modifier-border);
         }
         
+        /* 删除悬浮效果，移除整个悬浮样式规则
         .example-card-container:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
+        */
         
         .example-card-toolbar {
             background: linear-gradient(to right, var(--interactive-accent), var(--background-modifier-accent));
@@ -67,12 +69,13 @@ const ExampleStyle: CardStyleTemplate = {
             border-radius: 20px;
             padding: 6px 12px;
             font-weight: bold;
-            transition: all 0.2s ease;
+            /* 删除过渡效果 */
         }
         
+        /* 修改按钮悬浮效果，只改变不透明度，不添加缩放效果 */
         .example-card-button:hover {
             opacity: 0.9;
-            transform: scale(1.05);
+            /* 移除 transform */
         }
         
         /* 自定义分页样式 */

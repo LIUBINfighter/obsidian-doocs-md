@@ -20,7 +20,7 @@ const DefaultStyle: CardStyleTemplate = {
             background-color: var(--background-primary);
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+            /* 删除滑动效果，移除 transition */
             overflow: auto;
             padding: 20px;
             margin: 10px auto;
